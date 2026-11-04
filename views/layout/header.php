@@ -16,7 +16,7 @@ $active_nav = $active_nav ?? '';
 
 $navLinks = [
     'shop' => ['Shop', $ROOT_DIR . '/views/shop.php'],
-    'design' => ['Design yours', $ROOT_DIR . '/views/design.php'],
+    'design' => ['Custom design', $ROOT_DIR . '/views/design.php'],
     'community' => ['Community', $ROOT_DIR . '/views/community.php'],
 ];
 ?>
@@ -30,6 +30,10 @@ $navLinks = [
     <meta property="og:title" content="<?php echo e($page_title); ?>">
     <meta property="og:description" content="<?php echo e($page_description); ?>">
     <meta property="og:type" content="website">
+    <?php if (!empty($page_image)): ?>
+        <meta property="og:image" content="<?php echo e($page_image); ?>">
+        <meta name="twitter:card" content="summary_large_image">
+    <?php endif; ?>
     <link rel="icon" href="<?php echo $ROOT_DIR; ?>/images/site/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="<?php echo $ROOT_DIR; ?>/images/site/favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="<?php echo $ROOT_DIR; ?>/images/site/apple-touch-icon.png">

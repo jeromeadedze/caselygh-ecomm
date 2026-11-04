@@ -9,7 +9,7 @@
             </div>
             <div class="footer-links">
                 <a href="<?php echo $ROOT_DIR; ?>/views/shop.php">Shop all cases</a>
-                <a href="<?php echo $ROOT_DIR; ?>/views/design.php">Custom case builder</a>
+                <a href="<?php echo $ROOT_DIR; ?>/views/design.php">Custom case studio</a>
                 <a href="<?php echo $ROOT_DIR; ?>/views/community.php">Casely Community</a>
                 <a href="<?php echo $ROOT_DIR; ?>/views/account.php">Track my order</a>
             </div>

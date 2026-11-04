@@ -274,15 +274,18 @@ INSERT INTO `phone_models` (`model_id`, `brand_id`, `model_name`, `sort_order`) 
 (6, 1, 'iPhone 17 Pro', 6),
 (7, 2, 'Galaxy S23', 1),
 (8, 2, 'Galaxy S24', 2),
-(9, 2, 'Galaxy A54', 3);
+(9, 2, 'Galaxy A54', 3),
+(10, 1, 'iPhone Air', 7);
 
+-- Placeholder catalogue. After importing this file, run
+-- migrations/2026_11_04_real_products.sql for the real products.
 INSERT INTO `products` (`product_id`, `collection_id`, `product_title`, `product_slug`, `product_price`, `product_desc`, `product_image`, `product_keywords`) VALUES
 (1, 2, 'Pink Script Initial', 'pink-script-initial', 95.00, 'Soft-touch pink with your initial in elegant white script.', 'case_pink_initial.jpg', 'pink initial script name'),
 (2, 2, 'Lilac Gingham Name', 'lilac-gingham-name', 110.00, 'Dreamy lilac gingham finished with your name in handwriting.', 'case_lilac_gingham.jpg', 'lilac gingham name purple'),
 (3, 4, 'Butter Bold Name', 'butter-bold-name', 120.00, 'Butter yellow with a loud, proud vertical name.', 'case_yellow_name.jpg', 'yellow butter bold name'),
-(4, 3, 'Sky Gingham', 'sky-gingham-tough', 130.00, 'Sky blue gingham on our double-layer drop-tested shell.', 'case_blue_gingham.jpg', 'blue sky gingham tough'),
-(5, 1, 'Pink Everyday', 'pink-everyday', 75.00, 'Ready to ship today. Pretty, slim and simple.', 'case_pink_initial.jpg', 'pink everyday plain ready'),
-(6, 1, 'Lilac Everyday', 'lilac-everyday', 80.00, 'Ready-made gingham classic, ships same day in Accra.', 'case_lilac_gingham.jpg', 'lilac gingham everyday ready');
+(4, 3, 'Sky Gingham', 'sky-gingham-tough', 130.00, 'Sky blue gingham on our double layer drop protection shell.', 'case_blue_gingham.jpg', 'blue sky gingham tough'),
+(5, 1, 'Pink Everyday', 'pink-everyday', 75.00, 'Ready to ship. Pretty, slim and simple.', 'case_pink_initial.jpg', 'pink everyday plain ready'),
+(6, 1, 'Lilac Everyday', 'lilac-everyday', 80.00, 'Ready-made gingham classic, ready to ship.', 'case_lilac_gingham.jpg', 'lilac gingham everyday ready');
 
 -- Which phones each product is made for (from the prototype's data):
 -- Apple-only products: 2, 4, 6. Apple + Samsung: 1, 3, 5.

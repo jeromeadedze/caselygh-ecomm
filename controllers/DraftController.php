@@ -53,7 +53,7 @@ class DraftController
         }
         $settingsJson = json_encode($settings);
         if (strlen($settingsJson) > self::MAX_SETTINGS_BYTES) {
-            return ['success' => false, 'error' => 'This design has too many settings to save.'];
+            return ['success' => false, 'error' => 'This design has too many settings to save. Remove some text or photos and try again.'];
         }
 
         $photos = is_array($photos) ? array_values($photos) : [];

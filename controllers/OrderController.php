@@ -25,7 +25,7 @@ class OrderController
     public function createFromCart($customerId, array $delivery, array $cartItems)
     {
         if (!$cartItems) {
-            return ['success' => false, 'error' => 'Your cart is empty.'];
+            return ['success' => false, 'error' => 'Your cart is empty. Add a case to check out.'];
         }
         foreach (['name', 'phone', 'address', 'city'] as $field) {
             if (trim($delivery[$field] ?? '') === '') {

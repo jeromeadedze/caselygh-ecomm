@@ -13,7 +13,7 @@ $draftData = null;
 if (isset($_GET['draft'])) {
     if (!is_logged_in()) {
         $_SESSION['redirect_after_login'] = '../views/design.php?draft=' . (int) $_GET['draft'];
-        $_SESSION['warning'] = 'Log in to open your saved design.';
+        $_SESSION['warning'] = 'Log in to open your draft.';
         redirect($ROOT_DIR . '/views/login.php');
     }
     $draft = (new DraftController())->getDraft((int) $_GET['draft'], get_user_id());
@@ -50,7 +50,7 @@ define('MAX_STUDIO_PHOTOS', 36);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Custom Studio — Design your phone case | Casely</title>
+    <title>Custom case studio — Design your phone case | Casely</title>
     <meta name="description" content="Step-by-step custom case studio: pick your phone, upload a photo, add filters, fonts and your name.">
     <link rel="icon" href="<?php echo $ROOT_DIR; ?>/images/site/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="<?php echo $ROOT_DIR; ?>/images/site/favicon.ico" sizes="any">
@@ -85,6 +85,10 @@ define('MAX_STUDIO_PHOTOS', 36);
             </a>
             <span class="studio-badge">CASELY</span>
             <div class="studio-topbar-actions">
+                <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="round-btn studio-new" id="new-design" aria-label="Start a new design" title="Start a new design">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    <span class="studio-new-label">New design</span>
+                </a>
                 <button type="button" class="round-btn" id="undo-btn" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
                 <button type="button" class="round-btn" id="redo-btn" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
                 <button type="button" class="round-btn is-on" id="grid-toggle" aria-pressed="true" aria-label="Toggle alignment grid">
@@ -136,7 +140,10 @@ define('MAX_STUDIO_PHOTOS', 36);
                 </button>
             </div>
         </div>
-        <p class="draft-status" id="draft-status" role="status"></p>
+        <div class="draft-status-row" id="draft-status-row" hidden>
+            <p class="draft-status" id="draft-status" role="status"></p>
+            <button type="button" class="text-link small" id="draft-rename" hidden>Rename</button>
+        </div>
 
         <p class="studio-error" id="studio-error" role="alert" hidden></p>
         <div class="studio-steps">
@@ -168,7 +175,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                             <?php elseif ($i === 1): ?>
                                 <div class="pick-grid">
                                     <button type="button" class="pick pick-card is-on" data-case-type="Standard"><strong>Standard</strong><span>Slim everyday</span></button>
-                                    <button type="button" class="pick pick-card" data-case-type="Tough"><strong>Tough</strong><span>+<?php echo ghs(TOUGH_EXTRA); ?> · drop-tested</span></button>
+                                    <button type="button" class="pick pick-card" data-case-type="Tough"><strong>Tough</strong><span>+<?php echo ghs(TOUGH_EXTRA); ?> · double layer protection</span></button>
                                 </div>
                                 <p class="swatch-label">Case colour</p>
                                 <div class="swatches" role="group" aria-label="Case colour">
@@ -191,7 +198,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                                         <button type="button" class="text-link small" id="photo-sort">Sort by colour</button>
                                     </div>
                                     <ul class="photo-list" id="photo-list"></ul>
-                                    <p class="field-note">Tap a photo to make it the main one. Single-photo layouts use the main photo.</p>
+                                    <p class="field-note">Select a photo to make it the main one. Single-photo layouts use the main photo.</p>
                                 </div>
 
                                 <div class="photo-controls" id="photo-controls" hidden>
@@ -204,7 +211,7 @@ define('MAX_STUDIO_PHOTOS', 36);
 
                                 <label class="consent">
                                     <input type="checkbox" id="consent">
-                                    <span>I own these photos and they have no copyrighted characters, logos or offensive content. My design will be checked by the Casely team before printing.</span>
+                                    <span>I own any photos in this design, and it has no copyrighted characters, logos or offensive content. The Casely team checks every design before printing.</span>
                                 </label>
 
                             <?php elseif ($i === 3): ?>
@@ -258,13 +265,12 @@ define('MAX_STUDIO_PHOTOS', 36);
                                     <?php endforeach; ?>
                                 </div>
                                 <p class="swatch-label">Size, angle and position</p>
-                                <p class="field-note" style="margin: 0 0 .75rem;">Tap the text on the case: drag it to move, pull a corner to resize, use the round handle to rotate.</p>
+                                <p class="field-note" style="margin: 0 0 .75rem;">Select the text on the case: drag it to move, pull a corner to resize, use the round handle to rotate.</p>
                                 <label class="slider-field"><span>Size <output id="text-size-out">100%</output></span>
                                     <input type="range" id="text-size" min="10" max="300" value="100"></label>
                                 <label class="slider-field" style="margin-top: .75rem;"><span>Angle <output id="text-rot-out">0°</output></span>
                                     <input type="range" id="text-rot" min="-180" max="180" value="0"></label>
                                 <button type="button" class="text-link small" id="text-reset" style="margin-top: 1rem;">Reset size, angle and position</button>
-                                </div>
 
                             <?php else: ?>
                                 <div class="pick-grid">
@@ -291,16 +297,40 @@ define('MAX_STUDIO_PHOTOS', 36);
     </aside>
 </main>
 
-<!-- Guests: drafts need an account. The design is kept in this browser while they sign in. -->
+<!-- Guests: drafts need an account. The design is kept in this browser while they log in. -->
 <dialog class="signin-dialog" id="draft-signin" aria-labelledby="draft-signin-title">
-    <h2 class="section-title-sm" id="draft-signin-title">Sign in to save your design</h2>
+    <h2 class="section-title-sm" id="draft-signin-title">Log in to save your design</h2>
     <p class="muted">Drafts are kept in your Casely account, so you can finish your case later on any device.</p>
-    <p class="small muted" style="margin-top: .5rem;">We'll hold on to this design while you sign in and save it for you straight after.</p>
+    <p class="small muted" style="margin-top: .5rem;">We'll hold on to this design while you log in and save it for you straight after.</p>
     <div class="button-row" style="margin-top: 1.25rem;">
         <a href="<?php echo $ROOT_DIR; ?>/views/login.php?next=studio" class="btn btn-primary" data-keep-design>Log in</a>
         <a href="<?php echo $ROOT_DIR; ?>/views/register.php?next=studio" class="btn btn-outline" data-keep-design>Create account</a>
     </div>
     <form method="dialog"><button class="signin-dialog-close text-link small" value="cancel">Not now</button></form>
+</dialog>
+
+<dialog class="signin-dialog" id="draft-name-dialog" aria-labelledby="draft-name-title">
+    <form id="draft-name-form">
+        <h2 class="section-title-sm" id="draft-name-title">Name this design</h2>
+        <label class="field">
+            <span>Design name</span>
+            <input type="text" class="input" id="draft-name-input" maxlength="80" autocomplete="off">
+        </label>
+        <p class="small muted">This is how it appears under Drafts in your account.</p>
+        <div class="button-row" style="margin-top: 1.25rem;">
+            <button type="submit" class="btn btn-primary" id="draft-name-save">Save draft</button>
+            <button type="button" class="btn btn-outline" id="draft-name-cancel">Cancel</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="signin-dialog" id="new-design-dialog" aria-labelledby="new-design-title">
+    <h2 class="section-title-sm" id="new-design-title">Start a new design?</h2>
+    <p class="muted">Changes you haven't saved to this design will be lost. Save a draft first to keep them.</p>
+    <div class="button-row" style="margin-top: 1.25rem;">
+        <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="btn btn-danger">Start new design</a>
+        <button type="button" class="btn btn-outline" id="new-design-keep">Keep editing</button>
+    </div>
 </dialog>
 
 <script src="<?php echo $ROOT_DIR; ?>/js/case-mockup.js?v=<?php echo filemtime(__DIR__ . '/../js/case-mockup.js'); ?>"></script>

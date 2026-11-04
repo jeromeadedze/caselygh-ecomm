@@ -45,6 +45,104 @@
     });
   });
 
+  // Actions that can't be undone ask first, naming what will be lost. Without
+  // JavaScript the form simply submits.
+  let confirmBox = null;
+  function askToConfirm(form) {
+    if (!confirmBox) {
+      confirmBox = document.createElement('dialog');
+      confirmBox.className = 'signin-dialog';
+      confirmBox.setAttribute('aria-labelledby', 'confirm-title');
+      confirmBox.innerHTML = '<h2 class="section-title-sm" id="confirm-title"></h2><p class="muted"></p>' +
+        '<div class="button-row" style="margin-top: 1.25rem;"><button type="button" class="btn btn-danger" data-yes></button><button type="button" class="btn btn-outline" data-no></button></div>';
+      document.body.append(confirmBox);
+      confirmBox.querySelector('[data-no]').addEventListener('click', () => confirmBox.close());
+    }
+    confirmBox.querySelector('h2').textContent = form.dataset.confirmTitle;
+    confirmBox.querySelector('p').textContent = form.dataset.confirmBody;
+    const yes = confirmBox.querySelector('[data-yes]');
+    const no = confirmBox.querySelector('[data-no]');
+    yes.textContent = form.dataset.confirmYes;
+    no.textContent = form.dataset.confirmNo;
+    yes.onclick = () => {
+      confirmBox.close();
+      form.dataset.confirmed = '1';
+      form.requestSubmit();
+    };
+    confirmBox.showModal();
+    no.focus(); // the safe choice is the default
+  }
+  document.querySelectorAll('form[data-confirm-title]').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      if (form.dataset.confirmed === '1') return;
+      e.preventDefault();
+      askToConfirm(form);
+    });
+  });
+
+  // Remember the customer's phone in this browser, so they only choose it once.
+  const savedPhone = {
+    get() { try { return localStorage.getItem('casely-phone') || ''; } catch (e) { return ''; } },
+    set(id) { try { if (id) localStorage.setItem('casely-phone', id); } catch (e) { /* not remembered */ } },
+  };
+  const finderSelect = document.querySelector('.phone-finder select[name="model"]');
+  if (finderSelect && [...finderSelect.options].some((o) => o.value && o.value === savedPhone.get())) {
+    finderSelect.value = savedPhone.get();
+  }
+  const shopModel = document.getElementById('shop-model');
+  if (shopModel) savedPhone.set(shopModel.value);
+
+  // ---------- Home page ----------
+  // Sections rise into place once as they enter the screen. The class is added
+  // from here, so without JavaScript everything is simply visible.
+  const reveals = document.querySelectorAll('[data-reveal]');
+  if (reveals.length && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('js-reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    reveals.forEach((el) => io.observe(el));
+  }
+
+  // Tagline: each word lights up in reading order as the section scrolls in.
+  const tagline = document.querySelector('[data-word-reveal]');
+  if (tagline && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    tagline.querySelectorAll('.tagline-line').forEach((line) => {
+      const words = line.textContent.trim().split(/\s+/);
+      line.textContent = '';
+      words.forEach((word, i) => {
+        const span = document.createElement('span');
+        span.className = 'tagline-word';
+        span.textContent = word;
+        line.append(span, i < words.length - 1 ? ' ' : '');
+      });
+    });
+    const words = Array.from(tagline.querySelectorAll('.tagline-word'));
+    let lit = 0;
+    let queued = false;
+    const light = () => {
+      queued = false;
+      const r = tagline.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Starts as the text enters the lower part of the screen, done by the middle.
+      const progress = (vh * 0.85 - r.top) / (vh * 0.85 - vh * 0.4);
+      const next = Math.round(Math.max(0, Math.min(1, progress)) * words.length);
+      for (; lit < next; lit++) words[lit].classList.add('is-lit');
+      if (lit >= words.length) window.removeEventListener('scroll', onScroll);
+    };
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(light);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    light();
+  }
+
   // ---------- Product page: phone model, case type, price, stock ----------
   const form = document.getElementById('buy-form');
   if (!form) return;
@@ -91,6 +189,28 @@
   // Picking a phone shows the case on that phone.
   const showOnModel = () => { drawMockup(); setView('mockup'); };
 
+  // Phones: a bar with the next step until the buy form scrolls into view.
+  const bar = document.getElementById('buy-bar');
+  let phoneChosen = false;
+  function updateBar(v) {
+    if (!bar) return;
+    bar.querySelector('[data-bar-phone]').textContent = phoneChosen ? modelName() : 'Which phone is yours?';
+    bar.querySelector('[data-bar-price]').textContent = v ? ghs(v.price) : '';
+    const add = bar.querySelector('[data-bar-add]');
+    add.hidden = !phoneChosen;
+    add.disabled = !v || v.stock < 1;
+    bar.querySelector('[data-bar-choose]').hidden = phoneChosen;
+  }
+  if (bar && 'IntersectionObserver' in window) {
+    bar.querySelector('[data-bar-choose]').addEventListener('click', () => {
+      form.scrollIntoView({ block: 'start' });
+      brandSelect.focus({ preventScroll: true });
+    });
+    new IntersectionObserver(([entry]) => {
+      bar.hidden = entry.isIntersecting || entry.boundingClientRect.top < 0;
+    }).observe(form.querySelector('.buy-row'));
+  }
+
   function current() {
     const brand = variants[brandSelect.value] || {};
     const model = brand[modelSelect.value] || {};
@@ -101,6 +221,7 @@
   function update() {
     const v = current();
     const qty = parseInt(qtyInput.value, 10) || 1;
+    updateBar(v);
     if (!v) {
       stockEl.textContent = 'Not available for this phone in that case type.';
       stockEl.classList.add('is-low');
@@ -116,7 +237,7 @@
     if (qty > qtyInput.max) qtyInput.value = qtyInput.max;
   }
 
-  brandSelect.addEventListener('change', () => {
+  function fillModels() {
     const models = variants[brandSelect.value] || {};
     modelSelect.innerHTML = '';
     Object.keys(models).forEach((id) => {
@@ -125,10 +246,20 @@
       opt.textContent = models[id].name;
       modelSelect.appendChild(opt);
     });
+  }
+  brandSelect.addEventListener('change', () => {
+    fillModels();
+    phoneChosen = true;
+    savedPhone.set(modelSelect.value);
     update();
     showOnModel();
   });
-  modelSelect.addEventListener('change', () => { update(); showOnModel(); });
+  modelSelect.addEventListener('change', () => {
+    phoneChosen = true;
+    savedPhone.set(modelSelect.value);
+    update();
+    showOnModel();
+  });
   form.querySelectorAll('input[name="case_type"]').forEach((r) => r.addEventListener('change', update));
   form.querySelectorAll('[data-qty]').forEach((btn) =>
     btn.addEventListener('click', () => {
@@ -137,5 +268,15 @@
       update();
     })
   );
+
+  // Start on the phone they already chose, if this case is made for it.
+  const savedBrand = Object.keys(variants).find((b) => variants[b][savedPhone.get()]);
+  if (savedBrand) {
+    brandSelect.value = savedBrand;
+    fillModels();
+    modelSelect.value = savedPhone.get();
+    phoneChosen = true;
+    showOnModel();
+  }
   update();
 })();

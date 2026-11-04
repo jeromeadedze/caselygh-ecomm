@@ -24,7 +24,7 @@ $result = (new CartController())->addProduct(
 );
 
 if ($result['success']) {
-    $_SESSION['success'] = "Added to your cart!";
+    $_SESSION['success'] = "Added to your cart.";
 } else {
     $_SESSION['error'] = $result['error'];
 }

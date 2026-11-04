@@ -23,7 +23,7 @@ $result = (new CommunityController())->submitPost(
 );
 
 if ($result['success']) {
-    $_SESSION['success'] = "Thanks! Your photo will appear once the Casely team approves it. Your reward code will show in your account.";
+    $_SESSION['success'] = "Thanks! Your photo will appear once the Casely team approves it. Your discount code will show in your account.";
     redirect('../views/account.php');
 }
 $_SESSION['error'] = $result['error'];

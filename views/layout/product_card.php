@@ -14,6 +14,6 @@
             <p class="product-card-title"><?php echo e($product['product_title']); ?></p>
             <p class="product-card-meta"><?php echo e($product['collection_name']); ?></p>
         </div>
-        <p class="product-card-price"><?php echo ghs($product['product_price']); ?></p>
+        <p class="product-card-price"><?php echo ghs(price_for($product['product_price'], ($product['collection_slug'] ?? '') === 'tough' ? 'Tough' : 'Standard')); ?></p>
     </div>
 </a>

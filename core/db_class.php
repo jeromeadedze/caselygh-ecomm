@@ -28,7 +28,7 @@ class Database
                 // Log the real reason; show visitors a generic message.
                 error_log("Database connection failed: " . $e->getMessage());
                 http_response_code(500);
-                die("Sorry, the store is unavailable right now. Please try again shortly.");
+                die("Sorry, the store is unavailable right now. Try again shortly.");
             }
         }
         $this->conn = self::$sharedConn;

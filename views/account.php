@@ -24,7 +24,7 @@ $drafts = (new DraftController())->getDrafts(get_user_id());
 
     <?php if ($rewardCodes): ?>
         <div class="notice notice-pink">
-            <strong>Your Community rewards:</strong>
+            <strong>Your discount codes:</strong>
             <?php foreach ($rewardCodes as $code): ?>
                 <code class="code-chip"><?php echo e($code); ?></code>
             <?php endforeach; ?>
@@ -61,11 +61,11 @@ $drafts = (new DraftController())->getDrafts(get_user_id());
 
     <section class="section" id="drafts">
         <div class="section-head">
-            <h2 class="section-title">Saved designs</h2>
+            <h2 class="section-title">Drafts</h2>
             <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="text-link">Start a new design &rarr;</a>
         </div>
         <?php if (!$drafts): ?>
-            <p class="muted">No saved designs yet. In the <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="text-link">custom studio</a>, press <strong>Save draft</strong> to keep a design and finish it later.</p>
+            <p class="muted">No drafts yet. In the <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="text-link">custom case studio</a>, press <strong>Save draft</strong> to keep a design and finish it later.</p>
         <?php else: ?>
             <ul class="draft-grid">
                 <?php foreach ($drafts as $d): ?>
@@ -83,7 +83,7 @@ $drafts = (new DraftController())->getDrafts(get_user_id());
                         <div class="draft-actions">
                             <a href="<?php echo $ROOT_DIR; ?>/views/design.php?draft=<?php echo (int) $d['draft_id']; ?>" class="btn btn-dark btn-xs">Continue</a>
                             <form action="<?php echo $ROOT_DIR; ?>/actions/delete_draft_action.php" method="POST"
-                                  onsubmit="return confirm('Delete the draft &quot;<?php echo e(addslashes($d['draft_name'])); ?>&quot;? This can\'t be undone.');">
+                                  data-confirm-title="Delete the draft “<?php echo e($d['draft_name']); ?>”?" data-confirm-body="This design and its photos will be deleted. This can't be undone." data-confirm-yes="Delete draft" data-confirm-no="Keep draft">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="draft_id" value="<?php echo (int) $d['draft_id']; ?>">
                                 <button type="submit" class="btn btn-outline btn-xs">Delete<span class="visually-hidden"> <?php echo e($d['draft_name']); ?></span></button>
@@ -98,7 +98,7 @@ $drafts = (new DraftController())->getDrafts(get_user_id());
     <section class="section">
         <h2 class="section-title">My community posts</h2>
         <?php if (!$posts): ?>
-            <p class="muted">You haven't shared a photo yet. <a href="<?php echo $ROOT_DIR; ?>/views/community.php#share" class="text-link">Share your case</a> and earn a reward.</p>
+            <p class="muted">You haven't shared a photo yet. <a href="<?php echo $ROOT_DIR; ?>/views/community.php#share" class="text-link">Share your case</a> and earn a discount code.</p>
         <?php else: ?>
             <div class="post-strip">
                 <?php foreach ($posts as $post): ?>

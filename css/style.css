@@ -166,6 +166,10 @@ main:focus { outline: none; }
 .mobile-nav { display: flex; justify-content: center; gap: 1.5rem; padding-bottom: .75rem; font-size: .9rem; font-weight: 700; }
 .mobile-nav a.is-active { color: var(--primary-strong); }
 @media (min-width: 768px) {
+  /* Equal side columns keep the links centred on the page, however wide the logo and actions are. */
+  .header-inner { display: grid; grid-template-columns: 1fr auto 1fr; }
+  .header-inner .logo { justify-self: start; }
+  .header-inner .header-actions { justify-self: end; }
   .main-nav { display: flex; }
   .mobile-nav { display: none; }
 }
@@ -213,7 +217,9 @@ main:focus { outline: none; }
 /* ---------- Hero ring (views/layout/hero_ring.php) ----------
    Each case sits on a circle: rotate to its angle, then push out by --r.
    The whole ring turns slowly; cases fade and settle in one after another. */
-.hero-ring { --r: 38cqi; --case-w: 10.5cqi; position: relative; aspect-ratio: 1; width: 100%; }
+/* overflow: the spinner is a square, so its empty corners stick out as it turns and
+   would make phones scroll sideways. The cases themselves stay inside this box. */
+.hero-ring { --r: 38cqi; --case-w: 10.5cqi; position: relative; aspect-ratio: 1; width: 100%; overflow: hidden; }
 .hero-ring-spin { position: absolute; inset: 0; }
 .hero-slot {
   position: absolute; left: 50%; top: 50%;
@@ -226,7 +232,6 @@ main:focus { outline: none; }
 .hero-copy { pointer-events: none; }
 .hero-copy > * { pointer-events: auto; }
 
-@media (max-width: 639px) { .hero-ring { --r: 34cqi; --case-w: 15cqi; } }
 
 /* Motion is opt-in: only for people who haven't asked for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
@@ -243,21 +248,96 @@ main:focus { outline: none; }
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
 }
 .hero-script { font-size: 2.25rem; line-height: 1; }
-.hero-copy h1 { font-size: 1.875rem; font-weight: 900; }
-.hero-copy p { margin-top: .5rem; font-size: .875rem; }
-.hero-actions { display: flex; gap: .5rem; margin-top: .75rem; }
-.hero-actions .btn { min-height: 44px; padding: .5rem 1.25rem; font-size: .875rem; }
-/* On phones the ring of cases is too busy to put text on, so the copy sits below the photo. */
-@media (max-width: 639px) {
-  .hero-copy { position: static; margin-top: -.5rem; }
-  .hero-actions { flex-wrap: wrap; justify-content: center; }
+.hero-copy h1 { font-size: 2.25rem; line-height: 1.1; font-weight: 900; margin-top: .25rem; max-width: 680px; }
+.hero-copy .hero-sub { margin-top: .75rem; font-size: 1rem; line-height: 1.5; max-width: 24rem; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem 1rem; margin-top: 1rem; }
+.hero-copy .hero-proof { margin-top: .75rem; font-size: .875rem; color: var(--muted-foreground); }
+@media (hover: hover) { .hero-proof a:hover { color: var(--foreground); text-decoration: underline; } }
+/* The text only fits inside the ring on wide screens; below that it sits under it. */
+@media (max-width: 899px) {
+  .hero-media { max-width: 30rem; }
+  .hero-ring { --r: 34cqi; --case-w: 15cqi; }
+  .hero-copy { position: static; margin-top: .5rem; }
 }
-@media (min-width: 640px) {
-  .hero-script { font-size: min(3.75rem, 6.6cqi); }
-  .hero-copy h1 { font-size: min(3.75rem, 6.6cqi); }
-  .hero-copy p { margin-top: 1rem; font-size: 1.25rem; }
-  .hero-actions { gap: .75rem; margin-top: 1.5rem; }
-  .hero-actions .btn { min-height: 48px; padding: .75rem 1.5rem; font-size: .9rem; }
+/* Tablets: a smaller ring keeps the call to action in the first screen. */
+@media (min-width: 640px) and (max-width: 899px) { .hero-media { max-width: 26rem; } }
+@media (min-width: 900px) {
+  .hero-script { font-size: min(2.25rem, 4cqi); }
+  .hero-copy h1 { font-size: min(3rem, 5.2cqi); }
+  .hero-copy .hero-sub { font-size: 1.125rem; line-height: 1.55; }
+  .hero-actions { margin-top: 1.5rem; }
+}
+
+/* ---------- Home: how it works ---------- */
+.how-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+.how-step { display: grid; gap: .5rem; align-content: start; padding: 1.5rem; border-radius: 1.5rem; color: var(--plum); }
+.how-number { font-family: var(--font-display); font-size: 2.25rem; font-weight: 900; line-height: 1; }
+.how-title { font-size: 1.25rem; line-height: 1.4; font-weight: 800; letter-spacing: -0.01em; }
+@media (min-width: 768px) { .how-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ---------- Home: benefits ---------- */
+.benefits { display: grid; gap: 2.5rem; align-items: center; }
+.benefits-visual { display: flex; justify-content: center; padding-block: 1.5rem; }
+.benefits-case { width: min(34%, 10rem); filter: drop-shadow(0 1px 2px oklch(0 0 0 / 0.12)); }
+.benefits-case svg { display: block; width: 100%; height: auto; }
+.benefits-case:nth-child(1) { transform: rotate(-9deg) translateX(12%); }
+.benefits-case:nth-child(2) { position: relative; z-index: 1; transform: translateY(-6%); }
+.benefits-case:nth-child(3) { transform: rotate(9deg) translateX(-12%); }
+.benefit-list { list-style: none; margin: 0 0 2rem; padding: 0; display: grid; gap: 1.5rem; }
+.benefit-title { font-family: var(--font-sans); font-size: 1.125rem; line-height: 1.55; font-weight: 700; letter-spacing: 0; }
+@media (min-width: 768px) { .benefits { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4rem; } }
+
+/* ---------- Home: tagline ---------- */
+.tagline { padding-block: 6rem 2rem; }
+.tagline-text {
+  max-width: 680px; margin-inline: auto; text-align: center; text-wrap: balance;
+  font-family: var(--font-display); font-weight: 900; font-size: 2.25rem; line-height: 1.11; letter-spacing: -0.02em;
+}
+.tagline-line { display: block; }
+.tagline-word { opacity: .3; transition: opacity .5s cubic-bezier(0.22, 1, 0.36, 1); }
+.tagline-word.is-lit { opacity: 1; }
+@media (min-width: 768px) { .tagline-text { font-size: 3rem; line-height: 1; } }
+
+/* ---------- Home: shop, FAQ, final call to action ---------- */
+.shop-best { margin-top: 3rem; margin-bottom: 0; }
+.shop-best .section-title-sm { margin-bottom: 0; }
+.shop-grid { margin-top: 1.5rem; }
+.shop-collections { margin-top: 3rem; }
+.faq-list { display: grid; gap: .5rem; }
+.faq-item { border: 1px solid var(--border); border-radius: 1rem; background: var(--card); }
+.faq-item summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  min-height: 48px; padding: .75rem 1rem; border-radius: 1rem; cursor: pointer; font-weight: 700; list-style: none;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-icon { position: relative; flex: none; width: 1rem; height: 1rem; }
+.faq-icon::before, .faq-icon::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: currentColor; }
+.faq-icon::after { transform: rotate(90deg); transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1); }
+.faq-item[open] .faq-icon::after { transform: rotate(0deg); }
+.faq-item p { padding: 0 1rem 1rem; }
+.faq-more { margin-top: 1rem; }
+.buy-bar {
+  position: fixed; inset: auto 0 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--border);
+}
+.buy-bar-text { min-width: 0; font-size: .875rem; }
+.buy-bar-phone { display: block; color: var(--muted-foreground); }
+.buy-bar .btn { flex: none; }
+@media (min-width: 768px) { .buy-bar { display: none; } }
+
+.final-cta {
+  display: grid; justify-items: center; gap: 1rem; padding: 3rem 1.5rem; text-align: center;
+  border-radius: 1.75rem; background: var(--secondary); color: var(--secondary-foreground);
+}
+.final-cta .section-title { margin-bottom: 0; color: var(--foreground); }
+.final-cta p { max-width: 36rem; }
+
+/* Home sections rise into place once (js/main.js adds js-reveal). */
+.js-reveal [data-reveal] { opacity: 0; transition: opacity .7s cubic-bezier(0.22, 1, 0.36, 1), translate .7s cubic-bezier(0.22, 1, 0.36, 1); }
+.js-reveal [data-reveal].is-visible { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .js-reveal [data-reveal] { translate: 0 32px; }
+  .js-reveal [data-reveal].is-visible { translate: 0 0; }
 }
 
 .phone-finder {
@@ -270,7 +350,7 @@ main:focus { outline: none; }
 
 .collection-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .collection-tile {
-  aspect-ratio: 1; display: flex; align-items: flex-end; padding: 1.25rem; border-radius: 1.75rem;
+  min-height: 6rem; display: flex; align-items: flex-end; padding: 1rem 1.25rem; border-radius: 1.5rem;
   font-family: var(--font-display); font-size: 1.25rem; font-weight: 900; color: var(--plum);
   transition: transform .2s ease;
 }
@@ -678,7 +758,12 @@ select.input {
 }
 .studio-summary-text { min-width: 0; font-size: .875rem; line-height: 1.3; }
 .studio-summary-text p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.studio-summary-model { font-family: var(--font-display); font-weight: 900; }
+.studio-summary-text .studio-summary-model { font-family: var(--font-display); font-weight: 900; white-space: normal; text-wrap: balance; }
+.studio-new-label { display: none; }
+@media (min-width: 1280px) {
+  .studio-new { display: inline-flex; align-items: center; width: auto; gap: .375rem; padding-inline: .75rem .875rem; font-size: .875rem; font-weight: 700; white-space: nowrap; }
+  .studio-new-label { display: inline; }
+}
 .studio-summary .btn { flex: none; min-height: 44px; }
 .studio-summary :focus-visible { outline-color: var(--primary-foreground); } /* white on pink: the pink ring vanished here */
 .studio-summary-actions { display: flex; gap: .5rem; flex: none; }
@@ -687,6 +772,7 @@ select.input {
 @media (hover: hover) { .btn-ghost-light:not(:disabled):hover { background: color-mix(in oklab, var(--primary-foreground) 14%, transparent); } }
 .draft-status { font-size: .85rem; color: var(--muted-foreground); min-height: 0; }
 .draft-status:empty { display: none; }
+.draft-status-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .125rem .75rem; }
 .signin-dialog {
   width: min(26rem, calc(100% - 2rem)); padding: 1.5rem; border: 1px solid var(--border); border-radius: 1.5rem;
   background: var(--card); color: var(--foreground); box-shadow: 0 20px 48px -20px oklch(0 0 0 / 0.35);

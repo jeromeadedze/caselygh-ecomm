@@ -11,8 +11,8 @@ verify_csrf();
 
 $decision = $_POST['decision'] ?? '';
 if ((new CommunityController())->moderate((int) ($_POST['post_id'] ?? 0), $decision)) {
-    $_SESSION['success'] = $decision === 'approved' ? "Post approved and reward code created." : "Post removed from the wall.";
+    $_SESSION['success'] = $decision === 'approved' ? "Post approved and discount code created." : "Post removed from the wall.";
 } else {
-    $_SESSION['error'] = "That decision could not be saved.";
+    $_SESSION['error'] = "Unable to save that decision. Try again.";
 }
 redirect_back('../views/admin/community.php');

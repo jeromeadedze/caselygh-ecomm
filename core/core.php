@@ -40,7 +40,7 @@ $_SESSION['last_activity'] = time();
 // browser making this request.
 if (is_logged_in() && ($_SESSION['user_agent'] ?? '') !== ($_SERVER['HTTP_USER_AGENT'] ?? '')) {
     secure_logout();
-    $_SESSION['error'] = "Your session ended for security reasons. Please log in again.";
+    $_SESSION['error'] = "Your session ended for security reasons. Log in again.";
 }
 
 // ---------- Login and roles ----------
@@ -69,7 +69,7 @@ function require_login()
 {
     if (!is_logged_in()) {
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'] ?? null;
-        $_SESSION['warning'] = "Please log in to continue.";
+        $_SESSION['warning'] = "Log in to continue.";
         header("Location: " . root_dir() . "/views/login.php");
         exit;
     }
@@ -78,7 +78,7 @@ function require_login()
 function require_admin()
 {
     if (!is_admin()) {
-        $_SESSION['error'] = "Access denied. Admin privileges required.";
+        $_SESSION['error'] = "This page is for the Casely team. Log in with a team account.";
         header("Location: " . root_dir() . "/index.php");
         exit;
     }
@@ -147,7 +147,7 @@ function verify_csrf($json = false)
         if ($json) {
             json_response(['success' => false, 'error' => 'Your session expired. Refresh the page and try again.'], 419);
         }
-        $_SESSION['error'] = "Your session expired. Please try again.";
+        $_SESSION['error'] = "Your session expired. Try again.";
         redirect_back();
     }
 }

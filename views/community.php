@@ -1,6 +1,6 @@
 <?php
 $page_title = 'Casely Community — real cases, real people';
-$page_description = 'Photos of Casely cases from our community. Shop the look and share yours for a discount.';
+$page_description = 'Photos of Casely cases from our community. Shop the look and share yours for a discount code.';
 $active_nav = 'community';
 require_once __DIR__ . '/layout/header.php';
 require_once __DIR__ . '/../controllers/CommunityController.php';

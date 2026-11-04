@@ -28,7 +28,7 @@ class CustomDesignController
     public function saveDesign($cartKey, $customerId, $modelId, $caseType, $text, $settings, $consent, $designFile, $sourceFile)
     {
         if (!$consent) {
-            return ['success' => false, 'error' => 'Confirm you own the image and it has no copyrighted or offensive content.'];
+            return ['success' => false, 'error' => 'Tick the consent box in the Photo step first.'];
         }
         if (!in_array($caseType, ['Standard', 'Tough'], true)) {
             return ['success' => false, 'error' => 'Choose a case type.'];
@@ -57,7 +57,7 @@ class CustomDesignController
         $settingsJson = json_encode(is_array($settings) ? $settings : []);
 
         $id = $this->designModel->createDesign($cartKey, $customerId, $modelId, $caseType, $design['filename'], $sourceName, $text, $settingsJson, $price);
-        return $id ? ['success' => true, 'design_id' => $id] : ['success' => false, 'error' => 'Your design could not be saved.'];
+        return $id ? ['success' => true, 'design_id' => $id] : ['success' => false, 'error' => 'Unable to save your design. Try again.'];
     }
 
     public function getDesign($designId)

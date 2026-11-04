@@ -15,7 +15,7 @@ $posts = (new CommunityController())->getPostsByStatus($status);
 <div class="container page">
     <h1 class="display-md">Community posts</h1>
     <?php include __DIR__ . '/admin_nav.php'; ?>
-    <p class="muted">Approving a post publishes it on the Community wall and gives the customer a reward code.</p>
+    <p class="muted">Approving a post publishes it on the Community wall and gives the customer a discount code.</p>
 
     <nav class="chip-row" aria-label="Filter posts">
         <?php foreach (['pending' => 'Waiting', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $key => $label): ?>
@@ -38,7 +38,7 @@ $posts = (new CommunityController())->getPostsByStatus($status);
                         <p class="strong"><?php echo e($p['customer_name']); ?> <?php echo $p['handle'] ? '· ' . e($p['handle']) : ''; ?></p>
                         <p class="muted small"><?php echo e($p['product_title'] ?? 'Custom / not listed'); ?></p>
                         <?php if ($p['caption']): ?><p class="small">“<?php echo e($p['caption']); ?>”</p><?php endif; ?>
-                        <?php if ($p['reward_code']): ?><p class="small">Reward: <code class="code-chip"><?php echo e($p['reward_code']); ?></code></p><?php endif; ?>
+                        <?php if ($p['reward_code']): ?><p class="small">Discount code: <code class="code-chip"><?php echo e($p['reward_code']); ?></code></p><?php endif; ?>
                     </div>
                     <?php if ($status !== 'approved'): ?>
                         <form action="<?php echo $ROOT_DIR; ?>/actions/moderate_post_action.php" method="POST" class="inline-form">

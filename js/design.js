@@ -215,8 +215,8 @@
     preview.classList.toggle('is-draggable', !!single);
     caseText.classList.toggle('is-draggable', hasText());
     $('#drag-hint').textContent = state.editing ? 'Type on the case. Press Enter when you are done.'
-      : single && hasText() ? 'Tap the photo or the text to adjust it. Tap the text again to type. Arrow keys move it.'
-      : single ? 'Tap the photo to move, zoom or rotate it. Arrow keys move it.' : 'Tap the text to adjust it. Tap it again to type. Arrow keys move it.';
+      : single && hasText() ? 'Select the photo or the text to adjust it. Select the text again to type. Arrow keys move it.'
+      : single ? 'Select the photo to move, zoom or rotate it. Arrow keys move it.' : 'Select the text to adjust it. Select it again to type. Arrow keys move it.';
     if (state.selected === 'photo' && !single) state.selected = null;
     if (state.selected === 'text' && !hasText()) state.selected = null;
     $('#add-text-btn').hidden = hasText();
@@ -264,7 +264,18 @@
   modelBtns.forEach((b) => b.addEventListener('click', () => selectModel(b)));
   // Start on the newest model of the first brand.
   const startGroup = $$('[data-models-for]:not([hidden]) [data-model-id]');
-  if (startGroup.length) selectModel(startGroup[startGroup.length - 1]);
+  // Start on the phone they chose elsewhere on the site, else the newest listed.
+  let savedPhoneId = '';
+  try { savedPhoneId = localStorage.getItem('casely-phone') || ''; } catch (e) { /* not remembered */ }
+  const savedPhoneBtn = savedPhoneId && $('[data-model-id="' + CSS.escape(savedPhoneId) + '"]');
+  if (savedPhoneBtn) {
+    const brandOfPhone = savedPhoneBtn.closest('[data-models-for]').dataset.modelsFor;
+    const brandBtn = brandBtns.find((b) => b.dataset.brand === brandOfPhone);
+    if (brandBtn) brandBtn.click();
+    selectModel(savedPhoneBtn);
+  } else if (startGroup.length) {
+    selectModel(startGroup[startGroup.length - 1]);
+  }
 
   // ---------- step 2: case type ----------
   const typeBtns = $$('[data-case-type]');
@@ -884,7 +895,7 @@
     }
     if (!state.consent) {
       openStep(STEP.photo);
-      showError('Tick the consent box under your photos first.');
+      showError('Tick the consent box in the Photo step first.');
       $('#consent').focus();
       return;
     }
@@ -937,7 +948,11 @@
   const draftBtn = $('#draft-btn');
   const draftStatus = $('#draft-status');
   const signinDialog = $('#draft-signin');
-  const setDraftStatus = (msg) => (draftStatus.textContent = msg);
+  const setDraftStatus = (msg) => {
+    draftStatus.textContent = msg;
+    $('#draft-status-row').hidden = !msg;
+    $('#draft-rename').hidden = !state.draftId;
+  };
 
   function draftSettings() {
     return {
@@ -954,7 +969,7 @@
     const res = await fetch(url, { method: 'POST', body: form, credentials: 'same-origin' });
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) {
-      const err = new Error(data.error || 'Sign in to save drafts.');
+      const err = new Error(data.error || 'Log in to save drafts.');
       err.login = true;
       throw err;
     }
@@ -986,17 +1001,19 @@
       const f = new FormData();
       f.append('csrf_token', studio.dataset.csrf);
       f.append('draft_id', state.draftId || '');
-      f.append('name', draftName());
+      f.append('name', state.draftTitle || draftName());
       f.append('model_id', state.modelId || '');
       f.append('settings', JSON.stringify(draftSettings()));
       f.append('photos', JSON.stringify(state.photos.map((p) => p.serverName)));
       f.append('preview', preview.blob, preview.name);
       const data = await postForm(studio.dataset.draftSaveUrl, f);
       state.draftId = data.draft_id;
+      state.draftTitle = data.name || state.draftTitle;
       history.replaceState(null, '', '?draft=' + data.draft_id);
       const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      setDraftStatus('Draft saved at ' + time + '. Find it under My account.');
-      draftBtn.innerHTML = '<span>Save<span class="btn-extra"> changes</span></span>';
+      setDraftStatus('"' + state.draftTitle + '" saved at ' + time + '. Find it under My account.');
+      draftBtn.innerHTML = '<span>Save</span>';
+      markSaved();
       draftBtn.setAttribute('aria-label', 'Save changes to draft');
     } catch (err) {
       setDraftStatus('');
@@ -1008,7 +1025,30 @@
       draftBtn.disabled = false;
     }
   }
-  draftBtn.addEventListener('click', saveDraft);
+  // The first save asks for a name. Later saves keep it, and Rename changes it.
+  const nameDialog = $('#draft-name-dialog');
+  const nameInput = $('#draft-name-input');
+  function askForName() {
+    const renaming = Boolean(state.draftId);
+    $('#draft-name-title').textContent = renaming ? 'Rename this draft' : 'Name this design';
+    $('#draft-name-save').textContent = renaming ? 'Save name' : 'Save draft';
+    nameInput.value = state.draftTitle || draftName();
+    nameDialog.showModal();
+    nameInput.select();
+  }
+  draftBtn.addEventListener('click', () => {
+    if (!LOGGED_IN) { signinDialog.showModal(); return; }
+    if (state.draftId || state.draftTitle) saveDraft();
+    else askForName();
+  });
+  $('#draft-rename').addEventListener('click', askForName);
+  $('#draft-name-cancel').addEventListener('click', () => nameDialog.close());
+  $('#draft-name-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    state.draftTitle = nameInput.value.trim() || draftName();
+    nameDialog.close();
+    saveDraft();
+  });
 
   // Put a saved design back into the studio. photoEntries: [{ file, serverName? }]
   function applyDesign(s, photoEntries, photoObjects) {
@@ -1147,12 +1187,29 @@
   redoBtn.addEventListener('click', redo);
   resetHistory();
 
+  // Start another design. Unsaved work gets a warning first.
+  const designFingerprint = () => {
+    const { bg, ...settings } = draftSettings(); // bg can be set by the photo's colour once it loads
+    return JSON.stringify([settings, state.photos.map((p) => p.serverName || (p.file && p.file.name))]);
+  };
+  let savedFingerprint = designFingerprint();
+  function markSaved() { savedFingerprint = designFingerprint(); }
+  const newDesignDialog = $('#new-design-dialog');
+  $('#new-design').addEventListener('click', (e) => {
+    if (designFingerprint() === savedFingerprint) return;
+    e.preventDefault();
+    newDesignDialog.showModal();
+    $('#new-design-keep').focus();
+  });
+  $('#new-design-keep').addEventListener('click', () => newDesignDialog.close());
+
   // Reopen a design: one kept while signing in, or a saved draft (?draft=ID).
   (async function restore() {
     const pending = await takePending();
     if (pending && Date.now() - pending.at < 24 * 3600 * 1000) {
       applyDesign(pending.settings || {}, (pending.photos || []).map((file) => ({ file })));
       resetHistory();
+      markSaved();
       if (LOGGED_IN) saveDraft();
       return;
     }
@@ -1168,8 +1225,10 @@
       }));
       applyDesign(draft.settings || {}, entries);
       state.draftId = draft.id;
+      state.draftTitle = draft.name;
       resetHistory();
-      draftBtn.innerHTML = '<span>Save<span class="btn-extra"> changes</span></span>';
+      markSaved();
+      draftBtn.innerHTML = '<span>Save</span>';
       draftBtn.setAttribute('aria-label', 'Save changes to draft');
       setDraftStatus('Editing your draft "' + draft.name + '".');
     } catch (_) {

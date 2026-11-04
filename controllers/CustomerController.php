@@ -62,7 +62,7 @@ class CustomerController
         if (!$user || !password_verify($pass, $user['customer_pass'])) {
             $attempts['count']++;
             $_SESSION['login_attempts'] = $attempts;
-            return ['success' => false, 'error' => 'Incorrect email or password.'];
+            return ['success' => false, 'error' => 'Incorrect email or password. Check them and try again.'];
         }
 
         unset($_SESSION['login_attempts']);

@@ -14,7 +14,7 @@ verify_csrf();
 $cartCtrl = new CartController();
 $items = $cartCtrl->getCartItems(get_cart_key());
 if ($problems = $cartCtrl->findStockProblems($items)) {
-    $_SESSION['error'] = "Not enough stock for: " . implode(', ', $problems) . ".";
+    $_SESSION['error'] = "Not enough stock for: " . implode(', ', $problems) . ". Lower the quantity to check out.";
     redirect('../views/cart.php');
 }
 

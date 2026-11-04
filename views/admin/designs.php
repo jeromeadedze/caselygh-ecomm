@@ -38,7 +38,7 @@ $designs = (new CustomDesignController())->getDesignsForReview($status);
                         <p class="strong"><?php echo e($d['model_name']); ?> · <?php echo e($d['case_type']); ?></p>
                         <p class="muted small">Order <?php echo e($d['invoice_no']); ?> · <?php echo e($d['customer_name'] ?? 'Guest'); ?></p>
                         <?php if ($d['design_text']): ?><p class="small">Text: “<?php echo e($d['design_text']); ?>”</p><?php endif; ?>
-                        <?php if ($d['review_note']): ?><p class="small">Note: <?php echo e($d['review_note']); ?></p><?php endif; ?>
+                        <?php if ($d['review_note']): ?><p class="small">Reason: <?php echo e($d['review_note']); ?></p><?php endif; ?>
                     </div>
                     <div class="inline-form">
                         <a href="<?php echo $ROOT_DIR; ?>/actions/design_image_action.php?id=<?php echo (int) $d['design_id']; ?>&amp;download=1" class="text-link small">Download print file</a>
@@ -51,7 +51,7 @@ $designs = (new CustomDesignController())->getDesignsForReview($status);
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="design_id" value="<?php echo (int) $d['design_id']; ?>">
                             <label class="field" style="margin:0">
-                                <span>Note to customer (required to reject)</span>
+                                <span>Reason for rejecting (for your records)</span>
                                 <input type="text" name="note" class="input" maxlength="255" placeholder="e.g. Contains a cartoon character">
                             </label>
                             <div class="inline-form">

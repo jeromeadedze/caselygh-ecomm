@@ -21,28 +21,28 @@ if (!defined('PUBLIC_UPLOAD_DIR')) {
 function save_uploaded_image($file, $targetDir, array $allowed = ['image/jpeg', 'image/png', 'image/webp'])
 {
     if (!$file || !isset($file['error'])) {
-        return ['success' => false, 'error' => 'No image was uploaded.'];
+        return ['success' => false, 'error' => 'Add a photo, then try again.'];
     }
     if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE || $file['size'] > MAX_UPLOAD_BYTES) {
-        return ['success' => false, 'error' => 'That image is too large (max ' . round(MAX_UPLOAD_BYTES / 1048576) . ' MB).'];
+        return ['success' => false, 'error' => 'That photo is too large. Use one under ' . round(MAX_UPLOAD_BYTES / 1048576) . ' MB.'];
     }
     if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
-        return ['success' => false, 'error' => 'The upload did not complete. Please try again.'];
+        return ['success' => false, 'error' => 'The upload did not finish. Try again.'];
     }
 
     $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
     $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
     if (!in_array($mime, $allowed, true) || !isset($extensions[$mime]) || !getimagesize($file['tmp_name'])) {
-        return ['success' => false, 'error' => 'Please upload a JPG or PNG image.'];
+        return ['success' => false, 'error' => 'Use a JPG, PNG or WebP photo.'];
     }
 
     if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true)) {
-        return ['success' => false, 'error' => 'The server could not store the image.'];
+        return ['success' => false, 'error' => 'Unable to save your photo. Try again in a moment.'];
     }
 
     $filename = date('Ymd') . '-' . bin2hex(random_bytes(10)) . '.' . $extensions[$mime];
     if (!move_uploaded_file($file['tmp_name'], $targetDir . '/' . $filename)) {
-        return ['success' => false, 'error' => 'The server could not store the image.'];
+        return ['success' => false, 'error' => 'Unable to save your photo. Try again in a moment.'];
     }
     return ['success' => true, 'filename' => $filename];
 }

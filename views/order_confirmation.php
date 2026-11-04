@@ -22,7 +22,7 @@ require_once __DIR__ . '/layout/header.php';
     <?php if ($paid): ?>
         <p class="script script-lg">Thank you!</p>
         <h1 class="display-md">Your order is in.</h1>
-        <p class="muted">Order <strong><?php echo e($order['invoice_no']); ?></strong> is paid. We'll text <?php echo e($order['delivery_phone']); ?> when it's on its way.</p>
+        <p class="muted">Order <strong><?php echo e($order['invoice_no']); ?></strong> is paid. We'll update you on <?php echo e($order['delivery_phone']); ?> by WhatsApp or phone.</p>
         <?php if ($hasCustom): ?>
             <p class="notice">Our team checks every custom design before printing. If anything needs changing, we'll contact you.</p>
         <?php endif; ?>

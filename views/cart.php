@@ -55,7 +55,7 @@ $problems = $cartCtrl->findStockProblems($items);
                         </div>
                         <div class="cart-side">
                             <p class="strong"><?php echo ghs($item['line_total']); ?></p>
-                            <form action="<?php echo $ROOT_DIR; ?>/actions/remove_from_cart_action.php" method="POST">
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/remove_from_cart_action.php" method="POST"<?php if ($item['is_custom']): ?> data-confirm-title="Remove your custom case?" data-confirm-body="You'll need to design it again unless you saved a draft." data-confirm-yes="Remove case" data-confirm-no="Keep case"<?php endif; ?>>
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="cart_id" value="<?php echo (int) $item['cart_id']; ?>">
                                 <button type="submit" class="icon-btn" aria-label="Remove <?php echo e($item['item_name']); ?>">
@@ -76,7 +76,10 @@ $problems = $cartCtrl->findStockProblems($items);
                 <?php else: ?>
                     <a href="<?php echo $ROOT_DIR; ?>/views/checkout.php" class="btn btn-primary btn-block">Check out</a>
                 <?php endif; ?>
-                <p class="summary-note">Pay with MoMo or card on the next step.</p>
+                <p class="summary-note"><?php echo is_logged_in()
+                    ? 'Pay with MoMo or card on the next step.'
+                    : 'Log in or create an account next. Your cart stays with you, then you pay with MoMo or card.'; ?></p>
+                <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="text-link small">Design another case &rarr;</a>
             </aside>
         </div>
     <?php endif; ?>

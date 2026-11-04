@@ -122,7 +122,7 @@ class ProductController
         } else {
             $productId = $this->productModel->addProduct($collectionId, $title, $slug, $price, $desc, $image, $keywords);
             if (!$productId) {
-                return ['success' => false, 'error' => 'The product could not be saved.'];
+                return ['success' => false, 'error' => 'Unable to save this case. Check the details and try again.'];
             }
         }
 

@@ -101,12 +101,15 @@ $caseDesign = casely_case_design($product['product_slug']);
                             </select>
                         </label>
                     </div>
+                    <?php if (!$caseDesign): ?>
+                        <p class="field-note">The photo shows one phone. Your case is made for the phone you choose, with the right camera cutout.</p>
+                    <?php endif; ?>
                 </fieldset>
 
                 <fieldset class="form-block">
                     <legend>Case type</legend>
                     <div class="option-grid">
-                        <?php foreach (['Standard' => 'Slim, light everyday case', 'Tough' => 'Double-layer drop protection, +' . ghs(TOUGH_EXTRA)] as $type => $note): ?>
+                        <?php foreach (['Standard' => 'Slim, light everyday case', 'Tough' => 'Double layer drop protection, +' . ghs(TOUGH_EXTRA)] as $type => $note): ?>
                             <label class="option-card">
                                 <input type="radio" name="case_type" value="<?php echo $type; ?>" <?php echo $type === $defaultType ? 'checked' : ''; ?>>
                                 <span class="option-name"><?php echo $type; ?></span>
@@ -127,6 +130,12 @@ $caseDesign = casely_case_design($product['product_slug']);
                     <button type="submit" class="btn btn-primary grow" data-add-btn><span>Add to cart · <span data-total><?php echo ghs($startPrice); ?></span></span></button>
                 </div>
             </form>
+            <!-- Phones: keeps the next step in reach until the buy form scrolls into view. Shown by js/main.js. -->
+            <div class="buy-bar" id="buy-bar" hidden>
+                <p class="buy-bar-text"><span class="buy-bar-phone" data-bar-phone></span> <strong data-bar-price></strong></p>
+                <button type="submit" form="buy-form" class="btn btn-primary btn-sm" data-bar-add>Add to cart</button>
+                <button type="button" class="btn btn-primary btn-sm" data-bar-choose>Choose phone</button>
+            </div>
             <?php endif; ?>
 
             <p class="assurance">
@@ -136,7 +145,7 @@ $caseDesign = casely_case_design($product['product_slug']);
         </div>
     </div>
 
-    <section class="section split-2">
+    <section class="section">
         <div>
             <h2 class="section-title">From the community</h2>
             <?php if ($posts): ?>
@@ -146,15 +155,9 @@ $caseDesign = casely_case_design($product['product_slug']);
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <p class="muted">No photos of this case yet. Bought it? Share yours and earn a discount.</p>
+                <p class="muted">No photos of this case yet. Bought it? Share yours and earn a discount code.</p>
             <?php endif; ?>
             <a href="<?php echo $ROOT_DIR; ?>/views/community.php" class="text-link">See the community &rarr;</a>
-        </div>
-        <div>
-            <h2 class="section-title">Reviews</h2>
-            <div class="soft-card">
-                <p class="muted">No reviews yet. Reviews from verified buyers will appear here.</p>
-            </div>
         </div>
     </section>
 </div>

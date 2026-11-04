@@ -15,8 +15,8 @@ $ok = (new CustomDesignController())->review((int) ($_POST['design_id'] ?? 0), $
 
 if (!$ok) {
     $_SESSION['error'] = $decision === 'rejected'
-        ? "Add a note telling the customer why the design was rejected."
-        : "That decision could not be saved.";
+        ? "Add a reason for rejecting this design."
+        : "Unable to save that decision. Try again.";
 } elseif ($decision === 'approved') {
     $_SESSION['success'] = "Design approved for printing.";
 } else {

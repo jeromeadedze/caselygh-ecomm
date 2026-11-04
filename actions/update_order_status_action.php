@@ -13,6 +13,6 @@ $status = $_POST['order_status'] ?? '';
 if ((new OrderController())->updateStatus((int) ($_POST['order_id'] ?? 0), $status)) {
     $_SESSION['success'] = "Order marked as " . strtolower(order_status_label($status)) . ".";
 } else {
-    $_SESSION['error'] = "That status could not be saved.";
+    $_SESSION['error'] = "Unable to save that status. Try again.";
 }
 redirect_back('../views/admin/orders.php');

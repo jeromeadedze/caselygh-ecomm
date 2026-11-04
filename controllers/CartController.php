@@ -30,10 +30,10 @@ class CartController
         }
         $variant = $this->productModel->getVariant($productId, $modelId, $caseType);
         if (!$variant || !$variant['is_active']) {
-            return ['success' => false, 'error' => 'This case is not available for that phone model.'];
+            return ['success' => false, 'error' => 'This case is not made for that phone. Choose another phone or case.'];
         }
         if ((int) $variant['stock'] < 1) {
-            return ['success' => false, 'error' => 'Sorry, that one is sold out for ' . $variant['model_name'] . '.'];
+            return ['success' => false, 'error' => 'Sold out for ' . $variant['model_name'] . '. Choose another phone or case.'];
         }
         $qty = max(1, min((int) $qty, (int) $variant['stock'], 10));
         $ok = $this->cartModel->addVariant($cartKey, $customerId, $variant['variant_id'], $qty);

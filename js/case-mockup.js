@@ -10,6 +10,7 @@
   // Which camera layout a model uses.
   function cameraFor(name) {
     const n = (name || '').toLowerCase();
+    if (/iphone.*\bair\b/.test(n)) return 'air';              // slim camera bar, 1 lens
     if (/iphone\s*1[7-9]\s*pro/.test(n)) return 'plateau';   // full-width camera bar
     if (/iphone.*pro/.test(n)) return 'pro';                  // square bump, 3 lenses
     if (/iphone/.test(n)) return 'dual';                      // square bump, 2 lenses
@@ -44,6 +45,7 @@
   //   iPhone 13/14/15   ~27 mm square bump, two ~12 mm lenses on the diagonal
   //   iPhone 15/16 Pro  ~36 mm square bump, three ~14.5 mm lenses in a triangle
   //   iPhone 17 Pro     edge-to-edge camera bar ~35 mm tall, same three lenses
+  //   iPhone Air        edge-to-edge pill-shaped bar, one lens, flash on the right
   //   Galaxy S/A        three ~12 mm lenses in a column, no bump
   const CAMERAS = {
     dual: () =>
@@ -58,6 +60,10 @@
       module(3, 3, 94, 49, 13.5) +
       lens(15.6, 15.8, 8.4) + lens(15.6, 40.2, 8.4) + lens(38.6, 28, 8.4) +
       flash(85, 16.5, 2.7) + sensor(85, 39.5, 2.5) + sensor(72, 28, 0.9),
+    air: () =>
+      module(3, 3, 94, 27, 13.5) +
+      lens(17, 16.5, 8) +
+      sensor(72, 16.5, 0.9) + flash(84, 16.5, 2.7),
     galaxy: () =>
       hole(16, 15.5, 9.6) + hole(16, 35.5, 9.6) + hole(16, 55.5, 9.6) +
       lens(16, 15.5, 6.9) + lens(16, 35.5, 6.9) + lens(16, 55.5, 6.9) + flash(31.5, 15.5, 2),

@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(['success' => false, 'error' => 'Method not allowed.'], 405);
 }
 if (!is_logged_in()) {
-    json_response(['success' => false, 'login' => true, 'error' => 'Sign in to save drafts.'], 401);
+    json_response(['success' => false, 'login' => true, 'error' => 'Log in to save drafts.'], 401);
 }
 verify_csrf(true);
 

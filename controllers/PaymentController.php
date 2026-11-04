@@ -48,8 +48,9 @@ class PaymentController
 
         if (!$response || empty($response['status']) || empty($response['data']['authorization_url'])) {
             $this->orders->markPaymentFailed($reference);
-            $message = $response['message'] ?? 'Could not reach Paystack.';
-            return ['success' => false, 'error' => 'Payment could not start: ' . $message];
+            // Paystack's own wording goes to the log, not to the customer.
+            error_log('Paystack could not start payment: ' . ($response['message'] ?? 'no response'));
+            return ['success' => false, 'error' => 'Unable to start payment. Your cart is safe, so try again in a moment.'];
         }
         return ['success' => true, 'url' => $response['data']['authorization_url'], 'reference' => $reference];
     }
@@ -63,7 +64,7 @@ class PaymentController
     {
         $payment = $this->orders->getPaymentByReference($reference);
         if (!$payment) {
-            return ['success' => false, 'error' => 'We could not find that payment.'];
+            return ['success' => false, 'error' => 'Unable to find that payment. Check My orders, and message us on WhatsApp at 0509868659 if you were charged.'];
         }
         if ($payment['status'] === 'success') {
             return ['success' => true, 'order_id' => (int) $payment['order_id']];

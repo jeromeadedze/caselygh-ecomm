@@ -33,7 +33,7 @@ class CommunityController
             mb_substr(trim((string) $caption), 0, 150),
             mb_substr($handle, 0, 40)
         );
-        return $ok ? ['success' => true] : ['success' => false, 'error' => 'Your photo could not be posted.'];
+        return $ok ? ['success' => true] : ['success' => false, 'error' => 'Unable to post your photo. Try again.'];
     }
 
     public function getApprovedPosts($limit = 24, $productId = null)

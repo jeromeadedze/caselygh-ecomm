@@ -12,7 +12,7 @@ verify_csrf();
 
 $order = (new OrderController())->getOrder((int) ($_POST['order_id'] ?? 0));
 if (!$order || (int) $order['customer_id'] !== (int) get_user_id() || $order['order_status'] !== 'pending_payment') {
-    $_SESSION['error'] = "That order can't be paid for again.";
+    $_SESSION['error'] = "That order can't be paid for again. Check its status in My orders.";
     redirect('../views/account.php');
 }
 
