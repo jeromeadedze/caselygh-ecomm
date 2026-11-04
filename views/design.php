@@ -29,7 +29,7 @@ if (isset($_GET['draft'])) {
     }
 }
 
-$steps = ['Device model', 'Case type', 'Photo', 'Layout', 'Filters', 'Fonts', 'Personalize', 'Text layout'];
+$steps = ['Device model', 'Case type', 'Photo', 'Layout', 'Filters', 'Text', 'Fonts', 'Text layout'];
 $fonts = [
     ['Script', "Pacifico, cursive"],
     ['Handwritten', "Caveat, cursive"],
@@ -93,7 +93,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                     <img id="photo" alt="Your main photo" draggable="false">
                     <div class="case-collage" id="collage" hidden></div>
                 </div>
-                <p class="case-text layout-vertical" id="case-text" style="font-family: Georgia, 'Times New Roman', serif; color:#FFFFFF"><span class="case-text-inner" id="case-text-inner">CS</span></p>
+                <p class="case-text layout-vertical" id="case-text" style="font-family: Georgia, 'Times New Roman', serif; color:#FFFFFF"><span class="case-text-inner" id="case-text-inner"></span></p>
                 <div class="case-camera-svg" id="case-camera" aria-hidden="true"></div>
                 <div class="case-grid" id="case-grid" aria-hidden="true"></div>
             </div>
@@ -108,6 +108,10 @@ define('MAX_STUDIO_PHOTOS', 36);
             </div>
         </div>
         <p class="studio-hint" id="drag-hint" hidden>Drag the photo on the case to move it.</p>
+        <button type="button" class="btn btn-outline btn-sm studio-add-text" id="add-text-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Add text
+        </button>
     </div>
 
     <!-- Panel -->
@@ -119,7 +123,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                 <p data-summary-price><?php echo ghs(CUSTOM_CASE_PRICE); ?></p>
             </div>
             <div class="studio-summary-actions">
-                <button type="button" class="btn btn-ghost-light" id="draft-btn" aria-label="Save draft">Save<span class="btn-extra"> draft</span></button>
+                <button type="button" class="btn btn-ghost-light" id="draft-btn" aria-label="Save draft"><span>Save<span class="btn-extra"> draft</span></span></button>
                 <button type="button" class="btn btn-dark" id="add-btn">
                     <svg class="icon-bold" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                     Add
@@ -159,6 +163,12 @@ define('MAX_STUDIO_PHOTOS', 36);
                                 <div class="pick-grid">
                                     <button type="button" class="pick pick-card is-on" data-case-type="Standard"><strong>Standard</strong><span>Slim everyday</span></button>
                                     <button type="button" class="pick pick-card" data-case-type="Tough"><strong>Tough</strong><span>+<?php echo ghs(TOUGH_EXTRA); ?> · drop-tested</span></button>
+                                </div>
+                                <p class="swatch-label">Case colour</p>
+                                <div class="swatches" role="radiogroup" aria-label="Case colour">
+                                    <?php foreach ($backgrounds as $name => $hex): ?>
+                                        <button type="button" class="swatch <?php echo $name === 'Black' ? 'is-on' : ''; ?>" data-bg="<?php echo $hex; ?>" style="background: <?php echo $hex; ?>" aria-label="<?php echo $name; ?>" role="radio" aria-checked="<?php echo $name === 'Black' ? 'true' : 'false'; ?>"></button>
+                                    <?php endforeach; ?>
                                 </div>
 
                             <?php elseif ($i === 2): ?>
@@ -221,29 +231,24 @@ define('MAX_STUDIO_PHOTOS', 36);
                                     <button type="button" class="text-link" id="filter-reset">Reset</button>
                                 </div>
 
-                            <?php elseif ($i === 5): ?>
+                            <?php elseif ($i === 6): ?>
                                 <div class="pick-grid">
                                     <?php foreach ($fonts as [$label2, $css]): ?>
                                         <button type="button" class="pick font-pick <?php echo $label2 === 'Bold serif' ? 'is-on' : ''; ?>" data-font="<?php echo e($css); ?>" style="font-family: <?php echo e($css); ?>"><?php echo $label2; ?></button>
                                     <?php endforeach; ?>
-                                    <button type="button" class="pick" data-font="none">No text</button>
                                 </div>
 
-                            <?php elseif ($i === 6): ?>
+                            <?php elseif ($i === 5): ?>
                                 <label class="field">
-                                    <span class="field-row">Name or initials <output id="text-count" class="muted">2/14</output></span>
-                                    <input type="text" id="text-input" class="input" maxlength="14" value="CS" autocomplete="off">
+                                    <span class="field-row">Name or initials <output id="text-count" class="muted">0/14</output></span>
+                                    <input type="text" id="text-input" class="input" maxlength="14" value="" placeholder="e.g. Ama or A.K." autocomplete="off">
                                 </label>
+                                <p class="field-note" id="text-optional-note">Text is optional. Leave this empty for a case with no text.</p>
+                                <button type="button" class="text-link small" id="text-remove" hidden>Remove text</button>
                                 <p class="swatch-label">Text colour</p>
                                 <div class="swatches" role="radiogroup" aria-label="Text colour">
                                     <?php foreach ($inks as $name => $hex): ?>
                                         <button type="button" class="swatch <?php echo $name === 'White' ? 'is-on' : ''; ?>" data-ink="<?php echo $hex; ?>" style="background: <?php echo $hex; ?>" aria-label="<?php echo $name; ?>" role="radio" aria-checked="<?php echo $name === 'White' ? 'true' : 'false'; ?>"></button>
-                                    <?php endforeach; ?>
-                                </div>
-                                <p class="swatch-label">Background</p>
-                                <div class="swatches" role="radiogroup" aria-label="Background colour">
-                                    <?php foreach ($backgrounds as $name => $hex): ?>
-                                        <button type="button" class="swatch <?php echo $name === 'Black' ? 'is-on' : ''; ?>" data-bg="<?php echo $hex; ?>" style="background: <?php echo $hex; ?>" aria-label="<?php echo $name; ?>" role="radio" aria-checked="<?php echo $name === 'Black' ? 'true' : 'false'; ?>"></button>
                                     <?php endforeach; ?>
                                 </div>
                                 <p class="swatch-label">Size, angle and position</p>

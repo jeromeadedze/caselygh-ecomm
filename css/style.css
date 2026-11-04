@@ -574,6 +574,7 @@ select.input {
 }
 .studio-stage { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; margin-top: 1.5rem; }
 .studio-hint { font-size: .85rem; color: var(--muted-foreground); margin-top: .75rem; }
+.studio-add-text { margin-top: .75rem; background: var(--card); }
 
 .case-preview {
   position: relative; width: min(300px, 70vw, calc((100vh - 10rem) * 9 / 19)); min-width: 180px; aspect-ratio: 9 / 19; overflow: hidden;

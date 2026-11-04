@@ -25,7 +25,7 @@
     Film: [['contrast', 1.25, 1], ['saturate', 1.2, 1], ['brightness', 1.08, 1], ['sepia', 0.15, 0]],
   };
   const COLLAGES = { 'grid-2x6': [2, 6], 'grid-3x7': [3, 7], 'grid-4x9': [4, 9] };
-  const STEP = { device: 0, type: 1, photo: 2, layout: 3, filters: 4, fonts: 5, text: 6, textLayout: 7 };
+  const STEP = { device: 0, type: 1, photo: 2, layout: 3, filters: 4, text: 5, fonts: 6, textLayout: 7 };
   const STEP_COUNT = $$('.step').length;
   const DEFAULT_STRENGTH = 80;
 
@@ -47,7 +47,7 @@
     filter: 'None',
     strength: DEFAULT_STRENGTH,
     font: "Georgia, 'Times New Roman', serif",
-    text: 'CS',
+    text: '', // no text until the customer adds some
     ink: '#FFFFFF',
     bg: '#1A1418',
     textLayout: 'vertical',
@@ -104,7 +104,7 @@
   function lockedReason(i) {
     if (i === STEP.layout && !hasPhotos()) return 'Add a photo first';
     if (i === STEP.filters && !hasPhotos()) return 'Add a photo first';
-    if ((i === STEP.text || i === STEP.textLayout) && state.font === 'none') return 'Pick a font first';
+    if ((i === STEP.fonts || i === STEP.textLayout) && !hasText()) return 'Add text first';
     return '';
   }
 
@@ -214,6 +214,9 @@
       : single ? 'Tap the photo to move, zoom or rotate it.' : 'Tap the text to move, resize or rotate it.';
     if (state.selected === 'photo' && !single) state.selected = null;
     if (state.selected === 'text' && !hasText()) state.selected = null;
+    $('#add-text-btn').hidden = hasText();
+    $('#text-remove').hidden = !hasText();
+    $('#text-optional-note').hidden = hasText();
     syncTextControls();
     syncPhotoControls();
     placeSelBox();
@@ -615,9 +618,25 @@
   const textCount = $('#text-count');
   const updateCount = () => (textCount.textContent = textInput.value.length + '/' + textInput.maxLength);
   textInput.addEventListener('input', () => {
+    const had = hasText();
     state.text = textInput.value.slice(0, 14);
     updateCount();
+    if (had !== hasText()) {
+      state.selected = hasText() ? 'text' : null;
+      refreshSteps(); // Fonts and Text layout unlock once there is text
+    }
     render();
+  });
+
+  // "Add text" under the case opens the Text step; "Remove text" clears it.
+  $('#add-text-btn').addEventListener('click', () => {
+    openStep(STEP.text);
+    textInput.focus();
+  });
+  $('#text-remove').addEventListener('click', () => {
+    textInput.value = '';
+    textInput.dispatchEvent(new Event('input'));
+    textInput.focus();
   });
   updateCount();
 
@@ -878,7 +897,7 @@
       history.replaceState(null, '', '?draft=' + data.draft_id);
       const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       setDraftStatus('Draft saved at ' + time + '. Find it under My account.');
-      draftBtn.innerHTML = 'Save<span class="btn-extra"> changes</span>';
+      draftBtn.innerHTML = '<span>Save<span class="btn-extra"> changes</span></span>';
       draftBtn.setAttribute('aria-label', 'Save changes to draft');
     } catch (err) {
       setDraftStatus('');
@@ -986,7 +1005,7 @@
       }));
       applyDesign(draft.settings || {}, entries);
       state.draftId = draft.id;
-      draftBtn.innerHTML = 'Save<span class="btn-extra"> changes</span>';
+      draftBtn.innerHTML = '<span>Save<span class="btn-extra"> changes</span></span>';
       draftBtn.setAttribute('aria-label', 'Save changes to draft');
       setDraftStatus('Editing your draft "' + draft.name + '".');
     } catch (_) {
