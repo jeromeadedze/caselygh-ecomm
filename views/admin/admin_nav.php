@@ -2,15 +2,18 @@
 // Admin sub-navigation. Expects $admin_page and $ROOT_DIR.
 require_once __DIR__ . '/../../controllers/CustomDesignController.php';
 require_once __DIR__ . '/../../controllers/CommunityController.php';
+require_once __DIR__ . '/../../controllers/ReviewController.php';
 
 $pendingDesigns = (new CustomDesignController())->countPendingPaid();
 $pendingPosts = (new CommunityController())->countPending();
+$pendingReviews = (new ReviewController())->countPending();
 $adminLinks = [
     'dashboard' => ['Dashboard', 'dashboard.php', 0],
     'orders' => ['Orders', 'orders.php', 0],
     'designs' => ['Custom designs', 'designs.php', $pendingDesigns],
     'products' => ['Products', 'products.php', 0],
     'community' => ['Community', 'community.php', $pendingPosts],
+    'reviews' => ['Reviews', 'reviews.php', $pendingReviews],
 ];
 ?>
 <nav class="admin-nav" aria-label="Admin">

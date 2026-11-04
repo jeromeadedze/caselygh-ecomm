@@ -134,16 +134,8 @@ $faqSchema = [
 </section>
 
 <?php
-// Instagram strip. To change a card, drop a photo in images/community/ and
-// update its line here (file, link to the post, and a short description).
-$igPosts = [
-    ['ig-mirror-selfie.jpg', 'https://www.instagram.com/casely.gh/p/DfIUBhqjdpo/', 'Customer mirror selfie holding a pink Casely case'],
-    ['ig-green-top.jpg',     'https://www.instagram.com/casely.gh/p/Ddml1aGNeFt/', 'Customer in a green top holding up her Casely case'],
-    ['ig-crossbody.jpg',     'https://www.instagram.com/casely.gh/p/De6Wcj6jf8d/', 'Red Casely case worn on a crossbody strap'],
-    ['ig-red-selfie.jpg',    'https://www.instagram.com/casely.gh/p/Dd9f5CIjRoj/', 'Customer mirror selfie with her Casely case'],
-    ['ig-pink-case.jpg',     'https://www.instagram.com/casely.gh/p/DezMYrOjQG3/', 'Pink custom case reading With God all things are possible'],
-];
-$igUrl = 'https://www.instagram.com/casely.gh/';
+// Instagram strip. The posts are listed in layout/ig_posts.php.
+require __DIR__ . '/layout/ig_posts.php';
 ?>
 <section class="container section ig-community" data-reveal aria-labelledby="ig-title">
     <div class="ig-head">

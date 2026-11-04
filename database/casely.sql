@@ -16,6 +16,7 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `reviews`;
 DROP TABLE IF EXISTS `community_posts`;
 DROP TABLE IF EXISTS `payments`;
 DROP TABLE IF EXISTS `orderdetails`;
@@ -261,6 +262,21 @@ INSERT INTO `collections` (`collection_id`, `collection_name`, `collection_slug`
 (3, 'Tough', 'tough', 'sky', 3),
 (4, 'Limited drops', 'limited-drops', 'butter', 4);
 
+CREATE TABLE `reviews` (
+  `review_id` int(11) NOT NULL AUTO_INCREMENT,
+  `customer_id` int(11) NOT NULL,
+  `order_id` int(11) NOT NULL,
+  `rating` tinyint(1) NOT NULL,
+  `review_text` varchar(500) NOT NULL,
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`review_id`),
+  UNIQUE KEY `one_review_per_order` (`order_id`),
+  KEY `customer_id` (`customer_id`),
+  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`) ON DELETE CASCADE,
+  CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO `phone_brands` (`brand_id`, `brand_name`) VALUES
 (1, 'Apple'),
 (2, 'Samsung');
@@ -298,9 +314,8 @@ JOIN phone_models m
 JOIN (SELECT 'Standard' AS case_type UNION ALL SELECT 'Tough') t
 WHERE m.brand_id = 1 OR p.product_id IN (1, 3, 5);
 
--- Three approved demo posts so the Community wall is not empty.
+-- Two approved demo posts so the Community wall is not empty.
 -- Delete these once real customers start posting.
 INSERT INTO `community_posts` (`customer_id`, `product_id`, `post_image`, `caption`, `handle`, `status`) VALUES
-(2, 1, 'seed/community_selfie.jpg', 'Demo post', '@casely.gh', 'approved'),
 (2, 3, 'seed/case_yellow_name.jpg', 'Demo post', '@casely.gh', 'approved'),
 (2, 2, 'seed/case_lilac_gingham.jpg', 'Demo post', '@casely.gh', 'approved');
