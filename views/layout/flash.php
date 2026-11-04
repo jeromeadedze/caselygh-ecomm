@@ -12,13 +12,21 @@ foreach (['success', 'warning', 'error'] as $type) {
 ?>
 <?php if ($flashes): ?>
     <div class="toast-stack" aria-live="polite">
+        <script>
+        // Fade a toast up and out, then remove it (with reduced motion it only fades).
+        window.caselyDismissToast = window.caselyDismissToast || function (t) {
+            if (!t || t.classList.contains('is-leaving')) return;
+            t.classList.add('is-leaving');
+            setTimeout(function () { t.remove(); }, 200);
+        };
+        </script>
         <?php foreach ($flashes as $type => $message): ?>
             <div class="toast toast-<?php echo $type; ?>" role="<?php echo $type === 'error' ? 'alert' : 'status'; ?>">
                 <p><?php echo e($message); ?></p>
                 <?php if ($type === 'success' && stripos($message, 'cart') !== false): ?>
                     <a href="<?php echo $ROOT_DIR; ?>/views/cart.php" class="toast-link">View cart</a>
                 <?php endif; ?>
-                <button type="button" class="toast-close" aria-label="Dismiss message" onclick="this.parentElement.remove()">&times;</button>
+                <button type="button" class="toast-close" aria-label="Dismiss message" onclick="window.caselyDismissToast ? caselyDismissToast(this.parentElement) : this.parentElement.remove()">&times;</button>
             </div>
         <?php endforeach; ?>
     </div>

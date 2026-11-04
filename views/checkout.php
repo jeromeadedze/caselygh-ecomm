@@ -25,7 +25,7 @@ $subtotal = array_sum(array_column($items, 'line_total'));
     <h1 class="display-lg">Checkout</h1>
 
     <div class="cart-layout">
-        <form action="<?php echo $ROOT_DIR; ?>/actions/checkout_action.php" method="POST" class="form-card" id="checkout-form">
+        <form action="<?php echo $ROOT_DIR; ?>/actions/checkout_action.php" method="POST" class="form-card" id="checkout-form" data-pending="Taking you to payment…">
             <?php echo csrf_field(); ?>
             <h2 class="section-title-sm">Delivery details</h2>
             <label class="field">

@@ -50,7 +50,7 @@
     text: '', // no text until the customer adds some
     ink: '#FFFFFF',
     bg: '#1A1418',
-    textLayout: 'vertical',
+    textLayout: 'centre', // horizontal by default; Vertical is one of the Text layout options
     consent: false,
     saving: false,
   };
@@ -61,6 +61,8 @@
   const collage = $('#collage');
   const caseText = $('#case-text');
   const errorBox = $('#studio-error');
+  // Undo / redo history: snapshots of every studio choice (see "undo / redo" below).
+  const hist = { past: [], future: [], current: null, lastKey: '', timer: 0, applying: false };
   // The layout places #case-text; the customer's move / resize / rotate go on the inner span,
   // so they always turn and grow around the text's own centre.
   const textInner = $('#case-text-inner');
@@ -90,9 +92,11 @@
     buttons.forEach((b) => {
       const on = b === chosen;
       b.classList.toggle('is-on', on);
-      if (b.hasAttribute('role')) b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false'); // screen readers hear "selected"
     });
   }
+  // Every option starts with its selected state announced too.
+  $$('.pick, .swatch').forEach((b) => b.setAttribute('aria-pressed', b.classList.contains('is-on') ? 'true' : 'false'));
 
   function showError(message) {
     errorBox.textContent = message;
@@ -211,8 +215,8 @@
     preview.classList.toggle('is-draggable', !!single);
     caseText.classList.toggle('is-draggable', hasText());
     $('#drag-hint').textContent = state.editing ? 'Type on the case. Press Enter when you are done.'
-      : single && hasText() ? 'Tap the photo or the text to adjust it. Tap the text again to type.'
-      : single ? 'Tap the photo to move, zoom or rotate it.' : 'Tap the text to adjust it. Tap it again to type.';
+      : single && hasText() ? 'Tap the photo or the text to adjust it. Tap the text again to type. Arrow keys move it.'
+      : single ? 'Tap the photo to move, zoom or rotate it. Arrow keys move it.' : 'Tap the text to adjust it. Tap it again to type. Arrow keys move it.';
     if (state.selected === 'photo' && !single) state.selected = null;
     if (state.selected === 'text' && !hasText()) state.selected = null;
     $('#add-text-btn').hidden = hasText();
@@ -221,12 +225,21 @@
     syncTextControls();
     syncPhotoControls();
     placeSelBox();
+    scheduleCommit();
   }
 
   // The camera on the preview follows the chosen phone (js/case-mockup.js).
   function drawCamera() {
     const box = $('#case-camera');
     if (box && window.CaselyMockup) box.innerHTML = window.CaselyMockup.camera(state.modelName);
+  }
+
+  // Record a change for undo once the studio has been still for a moment.
+  function scheduleCommit() {
+    if (!state.ready || hist.applying) return;
+    clearTimeout(hist.timer);
+    hist.timer = setTimeout(() => commit(), 350);
+    if (typeof updateHistoryButtons === 'function') { try { updateHistoryButtons(); } catch (_) { /* not ready yet */ } }
   }
 
   // ---------- step 1: device ----------
@@ -330,7 +343,6 @@
         remove.setAttribute('aria-label', 'Remove photo ' + (i + 1));
         remove.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
         remove.addEventListener('click', () => {
-          URL.revokeObjectURL(p.url);
           state.photos.splice(i, 1);
           if (i === 0) resetPosition();
           if (!hasPhotos() && isCollage()) setLayout('full');
@@ -662,6 +674,16 @@
   sizeIn.addEventListener('input', () => { state.textScale = sizeIn.value / 100; render(); });
   rotIn.addEventListener('input', () => { state.textRot = parseInt(rotIn.value, 10); render(); });
   document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && /^[zy]$/i.test(e.key)) {
+      const el = document.activeElement;
+      const inField = el && (el.isContentEditable || el.tagName === 'TEXTAREA' ||
+        (el.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button'].includes(el.type)));
+      if (inField) return; // let text fields use their own undo
+      e.preventDefault();
+      if (e.key.toLowerCase() === 'y' || e.shiftKey) redo();
+      else undo();
+      return;
+    }
     if (e.key === 'Escape' && state.selected && !state.editing) { state.selected = null; render(); }
     // Arrow keys nudge whatever is selected (6px, or 24px with Shift), for anyone who can't drag.
     const dir = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
@@ -870,7 +892,8 @@
     state.saving = true;
     const btn = $('#add-btn');
     btn.disabled = true;
-    btn.lastChild.textContent = ' Saving…';
+    btn.classList.add('is-busy');
+    btn.querySelector('.btn-label').textContent = 'Saving…';
     showError('');
 
     try {
@@ -901,7 +924,8 @@
       showError(err.message);
       state.saving = false;
       btn.disabled = false;
-      btn.lastChild.textContent = ' Add';
+      btn.classList.remove('is-busy');
+      btn.querySelector('.btn-label').innerHTML = 'Add<span class="btn-extra"> to cart</span>';
     }
   });
 
@@ -942,6 +966,7 @@
     if (!LOGGED_IN) { signinDialog.showModal(); return; }
     if (state.savingDraft) return;
     state.savingDraft = true;
+    draftBtn.classList.add('is-busy');
     draftBtn.disabled = true;
     showError('');
     try {
@@ -979,20 +1004,25 @@
       else showError(err.message);
     } finally {
       state.savingDraft = false;
+      draftBtn.classList.remove('is-busy');
       draftBtn.disabled = false;
     }
   }
   draftBtn.addEventListener('click', saveDraft);
 
   // Put a saved design back into the studio. photoEntries: [{ file, serverName? }]
-  function applyDesign(s, photoEntries) {
+  function applyDesign(s, photoEntries, photoObjects) {
     const click = (sel) => { const b = $(sel); if (b) b.click(); };
     const q = (v) => '"' + CSS.escape(String(v)) + '"';
     if (s.brand) click('[data-brand=' + q(s.brand) + ']');
     if (s.modelId) click('[data-model-id=' + q(s.modelId) + ']');
     if (s.caseType) click('[data-case-type=' + q(s.caseType) + ']');
-    state.photos = photoEntries.map((e) => ({ file: e.file, url: URL.createObjectURL(e.file), serverName: e.serverName || null, hue: 0, sat: 0 }));
-    state.photos.forEach(measureColour);
+    if (photoObjects) {
+      state.photos = photoObjects.slice();
+    } else {
+      state.photos = photoEntries.map((e) => ({ file: e.file, url: URL.createObjectURL(e.file), serverName: e.serverName || null, hue: 0, sat: 0 }));
+      state.photos.forEach(measureColour);
+    }
     if (s.layout && (s.layout in COLLAGES || ['full', 'framed', 'split'].includes(s.layout))) setLayout(s.layout);
     if (s.filter) click('[data-filter=' + q(s.filter) + ']');
     if (Number.isFinite(s.strength)) setStrength(Math.max(0, Math.min(100, s.strength)));
@@ -1059,11 +1089,70 @@
   render();
   state.ready = true; // after the first paint, opening a step may scroll the list
 
+  // ---------- undo / redo ----------
+  // A change is recorded once things settle for a moment, so a whole drag or a
+  // typed word is one step. Snapshots share photo objects, so they stay small.
+  const undoBtn = $('#undo-btn');
+  const redoBtn = $('#redo-btn');
+  const HISTORY_MAX = 60;
+  const snapshot = () => ({ settings: draftSettings(), photos: state.photos.slice() });
+  const snapKey = (snap) => JSON.stringify([snap.settings, snap.photos.map((p) => p.url)]);
+
+  function updateHistoryButtons() {
+    undoBtn.disabled = !(hist.past.length || hist.timer);
+    redoBtn.disabled = !hist.future.length;
+  }
+  function commit() {
+    clearTimeout(hist.timer);
+    hist.timer = 0;
+    const snap = snapshot();
+    const key = snapKey(snap);
+    if (key !== hist.lastKey) {
+      if (hist.current) hist.past.push(hist.current);
+      if (hist.past.length > HISTORY_MAX) hist.past.shift();
+      hist.current = snap;
+      hist.lastKey = key;
+      hist.future = [];
+    }
+    updateHistoryButtons();
+  }
+  function resetHistory() {
+    hist.past = [];
+    hist.future = [];
+    hist.current = snapshot();
+    hist.lastKey = snapKey(hist.current);
+    updateHistoryButtons();
+  }
+  function restoreSnapshot(snap) {
+    if (state.editing) finishEditing();
+    hist.applying = true;
+    applyDesign(snap.settings, null, snap.photos);
+    hist.applying = false;
+    hist.current = snap;
+    hist.lastKey = snapKey(snapshot());
+    updateHistoryButtons();
+  }
+  function undo() {
+    if (hist.timer) commit(); // record the change still waiting, so it can be undone too
+    if (!hist.past.length) return;
+    hist.future.push(hist.current);
+    restoreSnapshot(hist.past.pop());
+  }
+  function redo() {
+    if (!hist.future.length) return;
+    hist.past.push(hist.current);
+    restoreSnapshot(hist.future.pop());
+  }
+  undoBtn.addEventListener('click', undo);
+  redoBtn.addEventListener('click', redo);
+  resetHistory();
+
   // Reopen a design: one kept while signing in, or a saved draft (?draft=ID).
   (async function restore() {
     const pending = await takePending();
     if (pending && Date.now() - pending.at < 24 * 3600 * 1000) {
       applyDesign(pending.settings || {}, (pending.photos || []).map((file) => ({ file })));
+      resetHistory();
       if (LOGGED_IN) saveDraft();
       return;
     }
@@ -1079,6 +1168,7 @@
       }));
       applyDesign(draft.settings || {}, entries);
       state.draftId = draft.id;
+      resetHistory();
       draftBtn.innerHTML = '<span>Save<span class="btn-extra"> changes</span></span>';
       draftBtn.setAttribute('aria-label', 'Save changes to draft');
       setDraftStatus('Editing your draft "' + draft.name + '".');

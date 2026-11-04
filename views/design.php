@@ -63,7 +63,7 @@ define('MAX_STUDIO_PHOTOS', 36);
 <body class="studio-body">
 <?php include __DIR__ . '/layout/flash.php'; ?>
 
-<div class="studio" id="studio"
+<main class="studio" id="studio"
      data-base-price="<?php echo (float) CUSTOM_CASE_PRICE; ?>"
      data-tough-extra="<?php echo (float) TOUGH_EXTRA; ?>"
      data-save-url="<?php echo $ROOT_DIR; ?>/actions/save_design_action.php"
@@ -75,6 +75,8 @@ define('MAX_STUDIO_PHOTOS', 36);
      <?php if ($draftData): ?>data-draft="<?php echo e(json_encode($draftData)); ?>"<?php endif; ?>
      data-csrf="<?php echo e(csrf_token()); ?>">
 
+    <h1 class="visually-hidden">Custom case studio</h1>
+
     <!-- Canvas -->
     <div class="studio-canvas">
         <div class="studio-topbar">
@@ -82,9 +84,13 @@ define('MAX_STUDIO_PHOTOS', 36);
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </a>
             <span class="studio-badge">CASELY</span>
-            <button type="button" class="round-btn is-on" id="grid-toggle" aria-pressed="true" aria-label="Toggle alignment grid">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-            </button>
+            <div class="studio-topbar-actions">
+                <button type="button" class="round-btn" id="undo-btn" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+                <button type="button" class="round-btn" id="redo-btn" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+                <button type="button" class="round-btn is-on" id="grid-toggle" aria-pressed="true" aria-label="Toggle alignment grid">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                </button>
+            </div>
         </div>
 
         <div class="studio-stage">
@@ -93,7 +99,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                     <img id="photo" alt="Your main photo" draggable="false">
                     <div class="case-collage" id="collage" hidden></div>
                 </div>
-                <p class="case-text layout-vertical" id="case-text" style="font-family: Georgia, 'Times New Roman', serif; color:#FFFFFF"><span class="case-text-inner" id="case-text-inner"></span></p>
+                <p class="case-text layout-centre" id="case-text" style="font-family: Georgia, 'Times New Roman', serif; color:#FFFFFF"><span class="case-text-inner" id="case-text-inner"></span></p>
                 <div class="case-camera-svg" id="case-camera" aria-hidden="true"></div>
                 <div class="case-grid" id="case-grid" aria-hidden="true"></div>
             </div>
@@ -109,7 +115,7 @@ define('MAX_STUDIO_PHOTOS', 36);
         </div>
         <p class="studio-hint" id="drag-hint" hidden>Drag the photo on the case to move it.</p>
         <button type="button" class="btn btn-outline btn-sm studio-add-text" id="add-text-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <svg class="icon-bold" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             Add text
         </button>
     </div>
@@ -124,9 +130,9 @@ define('MAX_STUDIO_PHOTOS', 36);
             </div>
             <div class="studio-summary-actions">
                 <button type="button" class="btn btn-ghost-light" id="draft-btn" aria-label="Save draft"><span>Save<span class="btn-extra"> draft</span></span></button>
-                <button type="button" class="btn btn-dark" id="add-btn">
+                <button type="button" class="btn btn-dark" id="add-btn" aria-label="Add to cart">
                     <svg class="icon-bold" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                    Add
+                    <span class="btn-label">Add<span class="btn-extra"> to cart</span></span>
                 </button>
             </div>
         </div>
@@ -146,7 +152,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                         </h2>
                         <div class="step-body" id="step-body-<?php echo $i; ?>" <?php echo $i === 0 ? '' : 'hidden'; ?>>
                             <?php if ($i === 0): ?>
-                                <div class="chip-row tight" role="radiogroup" aria-label="Phone brand">
+                                <div class="chip-row tight" role="group" aria-label="Phone brand">
                                     <?php foreach (array_keys($modelsByBrand) as $brand): ?>
                                         <button type="button" class="pick <?php echo $brand === $firstBrand ? 'is-on' : ''; ?>" data-brand="<?php echo e($brand); ?>"><?php echo e($brand); ?></button>
                                     <?php endforeach; ?>
@@ -165,15 +171,15 @@ define('MAX_STUDIO_PHOTOS', 36);
                                     <button type="button" class="pick pick-card" data-case-type="Tough"><strong>Tough</strong><span>+<?php echo ghs(TOUGH_EXTRA); ?> · drop-tested</span></button>
                                 </div>
                                 <p class="swatch-label">Case colour</p>
-                                <div class="swatches" role="radiogroup" aria-label="Case colour">
+                                <div class="swatches" role="group" aria-label="Case colour">
                                     <?php foreach ($backgrounds as $name => $hex): ?>
-                                        <button type="button" class="swatch <?php echo $name === 'Black' ? 'is-on' : ''; ?>" data-bg="<?php echo $hex; ?>" style="background: <?php echo $hex; ?>" aria-label="<?php echo $name; ?>" role="radio" aria-checked="<?php echo $name === 'Black' ? 'true' : 'false'; ?>"></button>
+                                        <button type="button" class="swatch <?php echo $name === 'Black' ? 'is-on' : ''; ?>" data-bg="<?php echo $hex; ?>" style="background: <?php echo $hex; ?>" aria-label="<?php echo $name; ?>"></button>
                                     <?php endforeach; ?>
                                 </div>
 
                             <?php elseif ($i === 2): ?>
                                 <label class="upload-box">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+                                    <svg class="icon-bold" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
                                     <span data-upload-label>Add photos</span>
                                     <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple class="visually-hidden">
                                 </label>
@@ -246,9 +252,9 @@ define('MAX_STUDIO_PHOTOS', 36);
                                 <p class="field-note" id="text-optional-note">Text is optional. Leave this empty for a case with no text.</p>
                                 <button type="button" class="text-link small" id="text-remove" hidden>Remove text</button>
                                 <p class="swatch-label">Text colour</p>
-                                <div class="swatches" role="radiogroup" aria-label="Text colour">
+                                <div class="swatches" role="group" aria-label="Text colour">
                                     <?php foreach ($inks as $name => $hex): ?>
-                                        <button type="button" class="swatch <?php echo $name === 'White' ? 'is-on' : ''; ?>" data-ink="<?php echo $hex; ?>" style="background: <?php echo $hex; ?>" aria-label="<?php echo $name; ?>" role="radio" aria-checked="<?php echo $name === 'White' ? 'true' : 'false'; ?>"></button>
+                                        <button type="button" class="swatch <?php echo $name === 'White' ? 'is-on' : ''; ?>" data-ink="<?php echo $hex; ?>" style="background: <?php echo $hex; ?>" aria-label="<?php echo $name; ?>"></button>
                                     <?php endforeach; ?>
                                 </div>
                                 <p class="swatch-label">Size, angle and position</p>
@@ -262,8 +268,8 @@ define('MAX_STUDIO_PHOTOS', 36);
 
                             <?php else: ?>
                                 <div class="pick-grid">
-                                    <?php foreach (['Vertical', 'Centre', 'Bottom', 'Corner'] as $tl): ?>
-                                        <button type="button" class="pick <?php echo $tl === 'Vertical' ? 'is-on' : ''; ?>" data-text-layout="<?php echo strtolower($tl); ?>"><?php echo $tl; ?></button>
+                                    <?php foreach (['Centre', 'Bottom', 'Corner', 'Vertical'] as $tl): ?>
+                                        <button type="button" class="pick <?php echo $tl === 'Centre' ? 'is-on' : ''; ?>" data-text-layout="<?php echo strtolower($tl); ?>"><?php echo $tl; ?></button>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
@@ -283,7 +289,7 @@ define('MAX_STUDIO_PHOTOS', 36);
             </div>
         </div>
     </aside>
-</div>
+</main>
 
 <!-- Guests: drafts need an account. The design is kept in this browser while they sign in. -->
 <dialog class="signin-dialog" id="draft-signin" aria-labelledby="draft-signin-title">

@@ -29,7 +29,7 @@ require_once __DIR__ . '/layout/header.php';
     <?php else: ?>
         <h1 class="display-md">Payment not completed</h1>
         <p class="muted">Order <strong><?php echo e($order['invoice_no']); ?></strong> is waiting for payment. Your cart has been kept.</p>
-        <form action="<?php echo $ROOT_DIR; ?>/actions/retry_payment_action.php" method="POST">
+        <form action="<?php echo $ROOT_DIR; ?>/actions/retry_payment_action.php" method="POST" data-pending="Taking you to payment…">
             <?php echo csrf_field(); ?>
             <input type="hidden" name="order_id" value="<?php echo (int) $order['order_id']; ?>">
             <button type="submit" class="btn btn-primary">Try paying again</button>

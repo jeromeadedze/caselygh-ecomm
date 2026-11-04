@@ -14,7 +14,7 @@ unset($_SESSION['old_register']);
 ?>
 
 <div class="container auth-page">
-    <form action="<?php echo $ROOT_DIR; ?>/actions/register_action.php" method="POST" class="form-card auth-card">
+    <form action="<?php echo $ROOT_DIR; ?>/actions/register_action.php" method="POST" class="form-card auth-card" data-pending="Creating your account…">
         <?php echo csrf_field(); ?>
         <p class="script script-lg">Join Casely</p>
         <h1 class="display-md">Create an account</h1>

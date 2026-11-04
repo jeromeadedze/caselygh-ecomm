@@ -76,7 +76,7 @@ $caseDesign = casely_case_design($product['product_slug']);
             <?php if (!$byBrand): ?>
                 <p class="notice">This case is not available for any phone right now.</p>
             <?php else: ?>
-            <form action="<?php echo $ROOT_DIR; ?>/actions/add_to_cart_action.php" method="POST" class="buy-form" id="buy-form"
+            <form action="<?php echo $ROOT_DIR; ?>/actions/add_to_cart_action.php" method="POST" class="buy-form" id="buy-form" data-pending="Adding…"
                   data-variants="<?php echo e(json_encode($byBrand)); ?>">
                 <?php echo csrf_field(); ?>
                 <input type="hidden" name="product_id" value="<?php echo (int) $product['product_id']; ?>">

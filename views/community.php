@@ -38,7 +38,7 @@ $products = is_logged_in() ? (new ProductController())->getProducts() : [];
     <section class="section form-card post-form" id="share">
         <h2 class="section-title">Share your case</h2>
         <?php if (is_logged_in()): ?>
-            <form action="<?php echo $ROOT_DIR; ?>/actions/community_post_action.php" method="POST" enctype="multipart/form-data" class="stack">
+            <form action="<?php echo $ROOT_DIR; ?>/actions/community_post_action.php" method="POST" enctype="multipart/form-data" class="stack" data-pending="Sending…">
                 <?php echo csrf_field(); ?>
                 <label class="field">
                     <span>Photo of your Casely case</span>

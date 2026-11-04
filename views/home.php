@@ -98,7 +98,7 @@ $igUrl = 'https://www.instagram.com/casely.gh/';
                 <a href="<?php echo $link; ?>" class="ig-card" target="_blank" rel="noopener">
                     <img src="<?php echo $ROOT_DIR; ?>/images/community/<?php echo $file; ?>" alt="<?php echo e($alt); ?>" loading="lazy" width="480" height="640">
                     <span class="ig-card-tag" aria-hidden="true">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/></svg>
+                        <svg class="icon-bold" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/></svg>
                         @casely.gh
                     </span>
                     <span class="visually-hidden">View this post on Instagram (opens in a new tab)</span>

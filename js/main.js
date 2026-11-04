@@ -6,8 +6,43 @@
   });
 
   // Hide success toasts after a few seconds. Warnings and errors stay until dismissed.
+  const dismiss = (t) => (window.caselyDismissToast ? window.caselyDismissToast(t) : t.remove());
   document.querySelectorAll('.toast-success').forEach((toast) => {
-    setTimeout(() => toast.remove(), 6000);
+    setTimeout(() => dismiss(toast), 6000);
+  });
+
+  // Something just went into the cart: give the header's cart count a quick bump
+  // so it's clear where it went.
+  if (document.querySelector('.toast-success .toast-link')) {
+    const count = document.querySelector('.cart-count');
+    if (count) count.classList.add('is-bumped');
+  }
+
+  // Buttons that send a form to the server show they're working, and a second
+  // click can't send it twice (e.g. two orders from a double-clicked Pay).
+  document.querySelectorAll('form[data-pending]').forEach((f) => {
+    f.addEventListener('submit', (e) => {
+      if (f.dataset.busy === '1') { e.preventDefault(); return; }
+      f.dataset.busy = '1';
+      const btn = e.submitter || f.querySelector('[type="submit"]');
+      if (!btn) return;
+      btn.dataset.idleHtml = btn.innerHTML;
+      btn.classList.add('is-busy');
+      btn.setAttribute('aria-disabled', 'true');
+      btn.textContent = f.dataset.pending;
+    });
+  });
+  // Coming back with the browser's Back button: the form is ready to use again.
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    document.querySelectorAll('form[data-busy="1"]').forEach((f) => {
+      f.dataset.busy = '';
+      f.querySelectorAll('.is-busy').forEach((b) => {
+        b.classList.remove('is-busy');
+        b.removeAttribute('aria-disabled');
+        if (b.dataset.idleHtml) b.innerHTML = b.dataset.idleHtml;
+      });
+    });
   });
 
   // ---------- Product page: phone model, case type, price, stock ----------

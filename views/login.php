@@ -14,7 +14,7 @@ unset($_SESSION['old_email']);
 ?>
 
 <div class="container auth-page">
-    <form action="<?php echo $ROOT_DIR; ?>/actions/login_action.php" method="POST" class="form-card auth-card">
+    <form action="<?php echo $ROOT_DIR; ?>/actions/login_action.php" method="POST" class="form-card auth-card" data-pending="Logging in…">
         <?php echo csrf_field(); ?>
         <p class="script script-lg">Welcome back</p>
         <h1 class="display-md">Log in</h1>
