@@ -1,0 +1,12 @@
+# Secrets: copy the .example files instead
+core/db_cred.php
+core/app_config.php
+
+# Customer uploads (keep the folders, not the files)
+uploads/private/designs/*
+uploads/private/sources/*
+uploads/public/community/*
+!uploads/**/.gitkeep
+!uploads/public/community/seed/
+
+.DS_Store
