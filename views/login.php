@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '/../core/core.php';
+// Arriving from the studio's "Save draft": go back to the studio after signing in.
+if (($_GET['next'] ?? '') === 'studio') {
+    $_SESSION['redirect_after_login'] = '../views/design.php';
+}
 if (is_logged_in()) {
     redirect(root_dir() . '/views/account.php');
 }

@@ -42,7 +42,7 @@
     textPos: { x: 0, y: 0 }, // nudge from the text layout's spot, in preview pixels
     textScale: 1,            // on top of the layout's own size
     textRot: 0,              // degrees, on top of the layout's own angle
-    textSelected: false,     // shows the move / resize / rotate box
+    selected: null,          // 'text' | 'photo' | null: which one shows the resize / rotate box
     layout: 'full',
     filter: 'None',
     strength: DEFAULT_STRENGTH,
@@ -67,6 +67,8 @@
   const textBox = $('#text-box');
   const sizeIn = $('#text-size');
   const rotIn = $('#text-rot');
+  const rot = $('#rot');   // photo rotate slider
+  const zoom = $('#zoom'); // photo zoom slider
   function baseAngle() { return state.textLayout === 'vertical' ? 90 : 0; }
 
   // ---------- helpers ----------
@@ -122,7 +124,8 @@
       section.classList.toggle('is-open', open);
       // Bring the opened step into view inside the scrolling steps list.
       if (open && state.ready) head.scrollIntoView({ block: 'nearest' });
-      if (open && (idx === STEP.text || idx === STEP.textLayout) && state.ready) state.textSelected = true;
+      if (open && state.ready && (idx === STEP.text || idx === STEP.textLayout) && hasText()) state.selected = 'text';
+      if (open && state.ready && (idx === STEP.photo || idx === STEP.layout) && hasPhotos() && !isCollage()) state.selected = 'photo';
     });
     const shown = Math.max(i, 0) + 1;
     $('#step-count').textContent = String(shown).padStart(2, '0') + '/' + String(STEP_COUNT).padStart(2, '0');
@@ -207,9 +210,13 @@
     $('#photo-controls').hidden = !single;
     preview.classList.toggle('is-draggable', !!single);
     caseText.classList.toggle('is-draggable', hasText());
-    if (hasText()) $('#drag-hint').textContent = (single ? 'Drag the photo to move it. ' : '') + 'Tap the text to move, resize or rotate it.';
+    $('#drag-hint').textContent = single && hasText() ? 'Tap the photo or the text to move, resize or rotate it.'
+      : single ? 'Tap the photo to move, zoom or rotate it.' : 'Tap the text to move, resize or rotate it.';
+    if (state.selected === 'photo' && !single) state.selected = null;
+    if (state.selected === 'text' && !hasText()) state.selected = null;
     syncTextControls();
-    placeTextBox();
+    syncPhotoControls();
+    placeSelBox();
   }
 
   // The camera on the preview follows the chosen phone (js/case-mockup.js).
@@ -253,8 +260,6 @@
   );
 
   // ---------- step 3: photos ----------
-  const rot = $('#rot');
-  const zoom = $('#zoom');
   const list = $('#photo-list');
 
   function loadImage(url) {
@@ -400,8 +405,10 @@
   let drag = null;
   preview.addEventListener('pointerdown', (e) => {
     const onText = hasText() && caseText.contains(e.target);
-    if (state.textSelected !== onText) { state.textSelected = onText; render(); }
-    if (!onText && (!hasPhotos() || isCollage())) return;
+    const canPhoto = hasPhotos() && !isCollage();
+    const pick = onText ? 'text' : canPhoto ? 'photo' : null;
+    if (state.selected !== pick) { state.selected = pick; render(); }
+    if (!pick) return;
     const from = onText ? state.textPos : state.pos;
     drag = { what: onText ? 'text' : 'photo', x: e.clientX - from.x, y: e.clientY - from.y };
     preview.setPointerCapture(e.pointerId);
@@ -515,24 +522,36 @@
     $('#text-rot-out').textContent = Math.round(state.textRot) + '°';
   }
 
-  // Draw the dashed box over the text, turned to the same angle.
-  function placeTextBox() {
-    if (!hasText() || !state.textSelected) { textBox.hidden = true; return; }
+  function syncPhotoControls() {
+    rot.value = Math.round(state.rot);
+    zoom.value = Math.round(state.zoom);
+    $('#rot-out').textContent = Math.round(state.rot) + '°';
+    $('#zoom-out').textContent = Math.round(state.zoom) + '%';
+  }
+
+  // Draw the dashed box over the selected text or photo, turned to the same angle.
+  function placeSelBox() {
+    const sel = state.selected;
+    if (!sel) { textBox.hidden = true; return; }
+    const el = sel === 'text' ? textInner : photo;
+    const scale = sel === 'text' ? state.textScale : 1;
+    const pad = sel === 'text' ? 12 : 0;
     textBox.hidden = false;
+    textBox.dataset.target = sel;
     const stage = textBox.parentElement.getBoundingClientRect();
-    const t = textInner.getBoundingClientRect();
-    const w = textInner.offsetWidth * state.textScale + 12;
-    const h = textInner.offsetHeight * state.textScale + 12;
-    const cx = t.left + t.width / 2 - stage.left;
-    const cy = t.top + t.height / 2 - stage.top;
+    const r = el.getBoundingClientRect();
+    const w = el.offsetWidth * scale + pad;
+    const h = el.offsetHeight * scale + pad;
+    const cx = r.left + r.width / 2 - stage.left;
+    const cy = r.top + r.height / 2 - stage.top;
     Object.assign(textBox.style, {
       width: w + 'px', height: h + 'px', left: cx - w / 2 + 'px', top: cy - h / 2 + 'px',
-      transform: 'rotate(' + (baseAngle() + state.textRot) + 'deg)',
+      transform: 'rotate(' + (sel === 'text' ? baseAngle() + state.textRot : state.rot) + 'deg)',
     });
   }
 
-  function textCentre() {
-    const t = textInner.getBoundingClientRect();
+  function centreOf(el) {
+    const t = el.getBoundingClientRect();
     return { x: t.left + t.width / 2, y: t.top + t.height / 2 };
   }
   const angleOf = (c, p) => (Math.atan2(p.y - c.y, p.x - c.x) * 180) / Math.PI;
@@ -541,11 +560,13 @@
   let boxDrag = null;
   textBox.addEventListener('pointerdown', (e) => {
     const handle = e.target.closest('[data-handle]');
+    if (!handle || !state.selected) return;
+    const isText = state.selected === 'text';
     const p = { x: e.clientX, y: e.clientY };
-    const c = textCentre();
+    const c = centreOf(isText ? textInner : photo);
     boxDrag = {
-      kind: handle ? handle.dataset.handle : 'move', start: p, centre: c,
-      pos: { ...state.textPos }, scale: state.textScale, rot: state.textRot,
+      kind: handle.dataset.handle, isText, start: p, centre: c,
+      scale: isText ? state.textScale : state.zoom, rot: isText ? state.textRot : state.rot,
       dist: Math.hypot(p.x - c.x, p.y - c.y) || 1, angle: angleOf(c, p),
     };
     textBox.setPointerCapture(e.pointerId);
@@ -556,21 +577,21 @@
     if (!boxDrag) return;
     const p = { x: e.clientX, y: e.clientY };
     const d = boxDrag;
-    if (d.kind === 'move') {
-      moveText({ x: d.pos.x + p.x - d.start.x, y: d.pos.y + p.y - d.start.y });
-    } else if (d.kind === 'scale') {
+    if (d.kind === 'scale') {
       const ratio = Math.hypot(p.x - d.centre.x, p.y - d.centre.y) / d.dist;
-      state.textScale = Math.min(3, Math.max(0.3, d.scale * ratio));
-      render();
+      if (d.isText) state.textScale = Math.min(3, Math.max(0.1, d.scale * ratio));
+      else state.zoom = Math.min(300, Math.max(50, d.scale * ratio)); // same range as the Zoom slider
     } else {
-      let rot = wrap180(d.rot + angleOf(d.centre, p) - d.angle);
-      // Snap to straight angles when close, so level text is easy to get back.
-      const total = rot + baseAngle();
+      const base = d.isText ? baseAngle() : 0;
+      let angle = wrap180(d.rot + angleOf(d.centre, p) - d.angle);
+      // Snap to straight angles when close, so level is easy to get back.
+      const total = angle + base;
       const nearest = Math.round(total / 90) * 90;
-      if (Math.abs(total - nearest) < 5) rot = wrap180(nearest - baseAngle());
-      state.textRot = rot;
-      render();
+      if (Math.abs(total - nearest) < 5) angle = wrap180(nearest - base);
+      if (d.isText) state.textRot = angle;
+      else state.rot = angle;
     }
+    render();
   });
   ['pointerup', 'pointercancel'].forEach((t) =>
     textBox.addEventListener(t, () => { boxDrag = null; textBox.classList.remove('is-active'); }));
@@ -578,9 +599,10 @@
   sizeIn.addEventListener('input', () => { state.textScale = sizeIn.value / 100; render(); });
   rotIn.addEventListener('input', () => { state.textRot = parseInt(rotIn.value, 10); render(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && state.textSelected) { state.textSelected = false; render(); }
+    if (e.key === 'Escape' && state.selected) { state.selected = null; render(); }
   });
-  window.addEventListener('resize', placeTextBox);
+  window.addEventListener('resize', placeSelBox);
+  photo.addEventListener('load', placeSelBox); // its size is only known once the image has loaded
 
   function resetText() {
     state.textScale = 1;
@@ -629,13 +651,13 @@
     ctx.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, x, y, w, h);
   }
 
-  async function exportDesign() {
+  async function exportDesign(exportW = EXPORT_W) {
     const rect = preview.getBoundingClientRect();
     const border = parseFloat(getComputedStyle(preview).borderLeftWidth) || 0;
     const innerW = rect.width - border * 2;
     const innerH = rect.height - border * 2;
-    const scale = EXPORT_W / innerW;
-    const W = EXPORT_W;
+    const scale = exportW / innerW;
+    const W = exportW;
     const H = Math.round(innerH * scale);
     const toCanvas = (r) => ({
       x: (r.left - rect.left - border) * scale, y: (r.top - rect.top - border) * scale,
@@ -790,7 +812,186 @@
     }
   });
 
+  // ---------- drafts ----------
+  // Signed-in customers can save the design and come back to it later.
+  // Guests are asked to sign in; their design waits in this browser (IndexedDB)
+  // and is restored and saved as a draft straight after they sign in.
+  const LOGGED_IN = studio.dataset.loggedIn === '1';
+  const draftBtn = $('#draft-btn');
+  const draftStatus = $('#draft-status');
+  const signinDialog = $('#draft-signin');
+  const setDraftStatus = (msg) => (draftStatus.textContent = msg);
+
+  function draftSettings() {
+    return {
+      brand: state.brand, modelId: state.modelId, caseType: state.caseType,
+      layout: state.layout, filter: state.filter, strength: state.strength,
+      font: state.font, text: state.text, ink: state.ink, bg: state.bg, textLayout: state.textLayout,
+      rot: state.rot, zoom: state.zoom, pos: state.pos,
+      textPos: state.textPos, textScale: state.textScale, textRot: state.textRot,
+    };
+  }
+  const draftName = () => (state.modelName || 'Custom case') + (hasText() ? ' · ' + state.text : '');
+
+  async function postForm(url, form) {
+    const res = await fetch(url, { method: 'POST', body: form, credentials: 'same-origin' });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      const err = new Error(data.error || 'Sign in to save drafts.');
+      err.login = true;
+      throw err;
+    }
+    if (!res.ok || !data.success) throw new Error(data.error || 'Your draft could not be saved. Check your connection and try again.');
+    return data;
+  }
+
+  async function saveDraft() {
+    if (!LOGGED_IN) { signinDialog.showModal(); return; }
+    if (state.savingDraft) return;
+    state.savingDraft = true;
+    draftBtn.disabled = true;
+    showError('');
+    try {
+      // Photos go up one at a time (each shrunk), and only once per draft.
+      for (let i = 0; i < state.photos.length; i++) {
+        const p = state.photos[i];
+        if (p.serverName) continue;
+        setDraftStatus('Saving photo ' + (i + 1) + ' of ' + state.photos.length + '…');
+        const small = await shrinkForUpload(p.file, 2000);
+        const f = new FormData();
+        f.append('csrf_token', studio.dataset.csrf);
+        f.append('photo', small, small.name || 'photo.jpg');
+        p.serverName = (await postForm(studio.dataset.draftUploadUrl, f)).file;
+      }
+      setDraftStatus('Saving draft…');
+      const preview = await exportDesign(360);
+      const f = new FormData();
+      f.append('csrf_token', studio.dataset.csrf);
+      f.append('draft_id', state.draftId || '');
+      f.append('name', draftName());
+      f.append('model_id', state.modelId || '');
+      f.append('settings', JSON.stringify(draftSettings()));
+      f.append('photos', JSON.stringify(state.photos.map((p) => p.serverName)));
+      f.append('preview', preview.blob, preview.name);
+      const data = await postForm(studio.dataset.draftSaveUrl, f);
+      state.draftId = data.draft_id;
+      history.replaceState(null, '', '?draft=' + data.draft_id);
+      const time = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      setDraftStatus('Draft saved at ' + time + '. Find it under My account.');
+      draftBtn.innerHTML = 'Save<span class="btn-extra"> changes</span>';
+      draftBtn.setAttribute('aria-label', 'Save changes to draft');
+    } catch (err) {
+      setDraftStatus('');
+      if (err.login) signinDialog.showModal();
+      else showError(err.message);
+    } finally {
+      state.savingDraft = false;
+      draftBtn.disabled = false;
+    }
+  }
+  draftBtn.addEventListener('click', saveDraft);
+
+  // Put a saved design back into the studio. photoEntries: [{ file, serverName? }]
+  function applyDesign(s, photoEntries) {
+    const click = (sel) => { const b = $(sel); if (b) b.click(); };
+    const q = (v) => '"' + CSS.escape(String(v)) + '"';
+    if (s.brand) click('[data-brand=' + q(s.brand) + ']');
+    if (s.modelId) click('[data-model-id=' + q(s.modelId) + ']');
+    if (s.caseType) click('[data-case-type=' + q(s.caseType) + ']');
+    state.photos = photoEntries.map((e) => ({ file: e.file, url: URL.createObjectURL(e.file), serverName: e.serverName || null, hue: 0, sat: 0 }));
+    state.photos.forEach(measureColour);
+    if (s.layout && (s.layout in COLLAGES || ['full', 'framed', 'split'].includes(s.layout))) setLayout(s.layout);
+    if (s.filter) click('[data-filter=' + q(s.filter) + ']');
+    if (Number.isFinite(s.strength)) setStrength(Math.max(0, Math.min(100, s.strength)));
+    if (s.font) click('[data-font=' + q(s.font) + ']');
+    if (typeof s.text === 'string') { textInput.value = s.text.slice(0, 14); textInput.dispatchEvent(new Event('input')); }
+    if (s.ink) click('[data-ink=' + q(s.ink) + ']');
+    if (s.bg) click('[data-bg=' + q(s.bg) + ']');
+    if (s.textLayout) click('[data-text-layout=' + q(s.textLayout) + ']'); // also resets the text box
+    const num = (v, d) => (Number.isFinite(v) ? v : d);
+    const pt = (v) => ({ x: num(v && v.x, 0), y: num(v && v.y, 0) });
+    state.rot = num(s.rot, 0);
+    state.zoom = num(s.zoom, 100);
+    state.pos = pt(s.pos);
+    state.textPos = pt(s.textPos);
+    state.textScale = num(s.textScale, 1);
+    state.textRot = num(s.textRot, 0);
+    state.selected = null;
+    photosChanged();
+  }
+
+  // Keep the guest's design in this browser while they go to sign in.
+  function idb() {
+    return new Promise((resolve, reject) => {
+      const r = indexedDB.open('casely-studio', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('pending');
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    });
+  }
+  async function keepPending() {
+    try {
+      const db = await idb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('pending', 'readwrite');
+        tx.objectStore('pending').put({ settings: draftSettings(), photos: state.photos.map((p) => p.file), at: Date.now() }, 'design');
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (_) { /* private mode etc.: the customer simply starts again */ }
+  }
+  async function takePending() {
+    try {
+      const db = await idb();
+      return await new Promise((resolve) => {
+        const tx = db.transaction('pending', 'readwrite');
+        const store = tx.objectStore('pending');
+        const get = store.get('design');
+        get.onsuccess = () => { store.delete('design'); resolve(get.result || null); };
+        get.onerror = () => resolve(null);
+      });
+    } catch (_) {
+      return null;
+    }
+  }
+  $$('[data-keep-design]').forEach((a) =>
+    a.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await keepPending();
+      window.location.href = a.href;
+    })
+  );
+
   openStep(0);
   render();
   state.ready = true; // after the first paint, opening a step may scroll the list
+
+  // Reopen a design: one kept while signing in, or a saved draft (?draft=ID).
+  (async function restore() {
+    const pending = await takePending();
+    if (pending && Date.now() - pending.at < 24 * 3600 * 1000) {
+      applyDesign(pending.settings || {}, (pending.photos || []).map((file) => ({ file })));
+      if (LOGGED_IN) saveDraft();
+      return;
+    }
+    if (!studio.dataset.draft) return;
+    const draft = JSON.parse(studio.dataset.draft);
+    setDraftStatus('Opening your draft…');
+    try {
+      const entries = await Promise.all(draft.photos.map(async (p) => {
+        const res = await fetch(p.url, { credentials: 'same-origin' });
+        if (!res.ok) throw new Error('missing');
+        const blob = await res.blob();
+        return { file: new File([blob], p.name, { type: blob.type }), serverName: p.name };
+      }));
+      applyDesign(draft.settings || {}, entries);
+      state.draftId = draft.id;
+      draftBtn.innerHTML = 'Save<span class="btn-extra"> changes</span>';
+      draftBtn.setAttribute('aria-label', 'Save changes to draft');
+      setDraftStatus('Editing your draft "' + draft.name + '".');
+    } catch (_) {
+      setDraftStatus('');
+      showError('Some photos in this draft could not be loaded. Add them again, then save.');
+    }
+  })();
 })();

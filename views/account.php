@@ -5,10 +5,12 @@ $page_title = 'My account';
 require_once __DIR__ . '/layout/header.php';
 require_once __DIR__ . '/../controllers/OrderController.php';
 require_once __DIR__ . '/../controllers/CommunityController.php';
+require_once __DIR__ . '/../controllers/DraftController.php';
 
 $orders = (new OrderController())->getOrdersByCustomer(get_user_id());
 $posts = (new CommunityController())->getPostsByCustomer(get_user_id());
 $rewardCodes = array_filter(array_column($posts, 'reward_code'));
+$drafts = (new DraftController())->getDrafts(get_user_id());
 ?>
 
 <div class="container container-narrow page">
@@ -54,6 +56,42 @@ $rewardCodes = array_filter(array_column($posts, 'reward_code'));
                     </tbody>
                 </table>
             </div>
+        <?php endif; ?>
+    </section>
+
+    <section class="section" id="drafts">
+        <div class="section-head">
+            <h2 class="section-title">Saved designs</h2>
+            <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="text-link">Start a new design &rarr;</a>
+        </div>
+        <?php if (!$drafts): ?>
+            <p class="muted">No saved designs yet. In the <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="text-link">custom studio</a>, press <strong>Save draft</strong> to keep a design and finish it later.</p>
+        <?php else: ?>
+            <ul class="draft-grid">
+                <?php foreach ($drafts as $d): ?>
+                    <li class="draft-card">
+                        <a href="<?php echo $ROOT_DIR; ?>/views/design.php?draft=<?php echo (int) $d['draft_id']; ?>" class="draft-thumb">
+                            <?php if ($d['preview_image']): ?>
+                                <img src="<?php echo $ROOT_DIR; ?>/actions/draft_file_action.php?f=<?php echo e($d['preview_image']); ?>" alt="" loading="lazy">
+                            <?php endif; ?>
+                            <span class="visually-hidden">Continue editing <?php echo e($d['draft_name']); ?></span>
+                        </a>
+                        <div class="draft-info">
+                            <p class="strong draft-name"><?php echo e($d['draft_name']); ?></p>
+                            <p class="muted small">Saved <?php echo date('j M Y, H:i', strtotime($d['updated_at'])); ?></p>
+                        </div>
+                        <div class="draft-actions">
+                            <a href="<?php echo $ROOT_DIR; ?>/views/design.php?draft=<?php echo (int) $d['draft_id']; ?>" class="btn btn-dark btn-xs">Continue</a>
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/delete_draft_action.php" method="POST"
+                                  onsubmit="return confirm('Delete the draft &quot;<?php echo e(addslashes($d['draft_name'])); ?>&quot;? This can\'t be undone.');">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="draft_id" value="<?php echo (int) $d['draft_id']; ?>">
+                                <button type="submit" class="btn btn-outline btn-xs">Delete<span class="visually-hidden"> <?php echo e($d['draft_name']); ?></span></button>
+                            </form>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
         <?php endif; ?>
     </section>
 

@@ -7,6 +7,28 @@ $ROOT_DIR = root_dir();
 $modelsByBrand = (new ProductController())->getModelsByBrand();
 $firstBrand = array_key_first($modelsByBrand);
 
+// ?draft=ID reopens one of the signed-in customer's saved drafts.
+require_once __DIR__ . '/../controllers/DraftController.php';
+$draftData = null;
+if (isset($_GET['draft'])) {
+    if (!is_logged_in()) {
+        $_SESSION['redirect_after_login'] = '../views/design.php?draft=' . (int) $_GET['draft'];
+        $_SESSION['warning'] = 'Log in to open your saved design.';
+        redirect($ROOT_DIR . '/views/login.php');
+    }
+    $draft = (new DraftController())->getDraft((int) $_GET['draft'], get_user_id());
+    if ($draft) {
+        $draftData = [
+            'id' => (int) $draft['draft_id'],
+            'name' => $draft['draft_name'],
+            'settings' => $draft['settings'],
+            'photos' => array_map(fn($f) => ['name' => $f, 'url' => $ROOT_DIR . '/actions/draft_file_action.php?f=' . $f], $draft['photos']),
+        ];
+    } else {
+        $_SESSION['error'] = 'We could not find that draft. It may have been deleted.';
+    }
+}
+
 $steps = ['Device model', 'Case type', 'Photo', 'Layout', 'Filters', 'Fonts', 'Personalize', 'Text layout'];
 $fonts = [
     ['Script', "Pacifico, cursive"],
@@ -47,6 +69,10 @@ define('MAX_STUDIO_PHOTOS', 36);
      data-save-url="<?php echo $ROOT_DIR; ?>/actions/save_design_action.php"
      data-cart-url="<?php echo $ROOT_DIR; ?>/views/cart.php"
      data-max-photos="<?php echo MAX_STUDIO_PHOTOS; ?>"
+     data-logged-in="<?php echo is_logged_in() ? '1' : '0'; ?>"
+     data-draft-upload-url="<?php echo $ROOT_DIR; ?>/actions/upload_draft_photo_action.php"
+     data-draft-save-url="<?php echo $ROOT_DIR; ?>/actions/save_draft_action.php"
+     <?php if ($draftData): ?>data-draft="<?php echo e(json_encode($draftData)); ?>"<?php endif; ?>
      data-csrf="<?php echo e(csrf_token()); ?>">
 
     <!-- Canvas -->
@@ -92,11 +118,15 @@ define('MAX_STUDIO_PHOTOS', 36);
                 <p data-summary-type>Standard case</p>
                 <p data-summary-price><?php echo ghs(CUSTOM_CASE_PRICE); ?></p>
             </div>
-            <button type="button" class="btn btn-dark" id="add-btn">
-                <svg class="icon-bold" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                Add
-            </button>
+            <div class="studio-summary-actions">
+                <button type="button" class="btn btn-ghost-light" id="draft-btn" aria-label="Save draft">Save<span class="btn-extra"> draft</span></button>
+                <button type="button" class="btn btn-dark" id="add-btn">
+                    <svg class="icon-bold" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    Add
+                </button>
+            </div>
         </div>
+        <p class="draft-status" id="draft-status" role="status"></p>
 
         <p class="studio-error" id="studio-error" role="alert" hidden></p>
         <div class="studio-steps">
@@ -219,7 +249,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                                 <p class="swatch-label">Size, angle and position</p>
                                 <p class="field-note" style="margin: 0 0 .75rem;">Tap the text on the case: drag it to move, pull a corner to resize, use the round handle to rotate.</p>
                                 <label class="slider-field"><span>Size <output id="text-size-out">100%</output></span>
-                                    <input type="range" id="text-size" min="30" max="300" value="100"></label>
+                                    <input type="range" id="text-size" min="10" max="300" value="100"></label>
                                 <label class="slider-field" style="margin-top: .75rem;"><span>Angle <output id="text-rot-out">0°</output></span>
                                     <input type="range" id="text-rot" min="-180" max="180" value="0"></label>
                                 <div class="text-position" style="margin-top: 1rem;">
@@ -259,6 +289,18 @@ define('MAX_STUDIO_PHOTOS', 36);
         </div>
     </aside>
 </div>
+
+<!-- Guests: drafts need an account. The design is kept in this browser while they sign in. -->
+<dialog class="signin-dialog" id="draft-signin" aria-labelledby="draft-signin-title">
+    <h2 class="section-title-sm" id="draft-signin-title">Sign in to save your design</h2>
+    <p class="muted">Drafts are kept in your Casely account, so you can finish your case later on any device.</p>
+    <p class="small muted" style="margin-top: .5rem;">We'll hold on to this design while you sign in and save it for you straight after.</p>
+    <div class="button-row" style="margin-top: 1.25rem;">
+        <a href="<?php echo $ROOT_DIR; ?>/views/login.php?next=studio" class="btn btn-primary" data-keep-design>Log in</a>
+        <a href="<?php echo $ROOT_DIR; ?>/views/register.php?next=studio" class="btn btn-outline" data-keep-design>Create account</a>
+    </div>
+    <form method="dialog"><button class="signin-dialog-close text-link small" value="cancel">Not now</button></form>
+</dialog>
 
 <script src="<?php echo $ROOT_DIR; ?>/js/case-mockup.js?v=<?php echo filemtime(__DIR__ . '/../js/case-mockup.js'); ?>"></script>
 <script src="<?php echo $ROOT_DIR; ?>/js/design.js?v=<?php echo filemtime(__DIR__ . '/../js/design.js'); ?>"></script>
