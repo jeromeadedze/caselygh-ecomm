@@ -595,9 +595,10 @@ select.input {
 .case-collage img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .case-text { position: absolute; margin: 0; font-weight: 700; pointer-events: none; white-space: nowrap; }
 .case-text-inner { display: inline-block; transform-origin: center; }
+.case-text.is-editing .case-text-inner { cursor: text; user-select: text; -webkit-user-select: text; outline: none; caret-color: var(--primary); min-width: .5ch; }
+.case-text.is-editing { cursor: text; }
 .case-text.is-draggable { pointer-events: auto; cursor: grab; touch-action: none; }
 .case-text.is-draggable:active { cursor: grabbing; }
-.text-position { display: flex; align-items: center; gap: 1.25rem; }
 
 /* Studio: selection box on the text (move / resize / rotate) */
 .text-box {
@@ -624,17 +625,6 @@ select.input {
 }
 .tb-rotate::before { content: ""; position: absolute; inset: -6px; }
 .tb-rotate::after { content: ""; position: absolute; top: 100%; left: 50%; width: 1.5px; height: 12px; translate: -50% 2px; background: var(--primary); }
-.nudge-pad { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 2px; flex: none; }
-.nudge-btn {
-  display: grid; place-items: center; padding: 0; border: 1.5px solid var(--border); border-radius: .75rem;
-  background: var(--card); color: var(--foreground); transition: transform .15s ease-out, background-color .15s ease;
-}
-.nudge-btn:active { transform: scale(.96); }
-@media (hover: hover) { .nudge-btn:hover { background: var(--muted); } }
-.nudge-up { grid-column: 2; grid-row: 1; }
-.nudge-left { grid-column: 1; grid-row: 2; }
-.nudge-right { grid-column: 3; grid-row: 2; }
-.nudge-down { grid-column: 2; grid-row: 3; }
 .case-text.layout-vertical { left: 50%; top: 62%; transform: translate(-50%, -50%) rotate(90deg); font-size: 9rem; line-height: .8; }
 .case-text.layout-centre { left: 50%; top: 55%; transform: translate(-50%, -50%); font-size: 3.2rem; line-height: 1; }
 .case-text.layout-bottom { left: 50%; bottom: 8%; transform: translateX(-50%); font-size: 2.6rem; line-height: 1; }

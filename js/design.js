@@ -186,9 +186,9 @@
         'translate(calc(-50% + ' + state.pos.x + 'px), calc(-50% + ' + state.pos.y + 'px)) rotate(' + state.rot + 'deg)';
     }
 
-    textInner.textContent = state.text;
+    if (!state.editing && textInner.textContent !== state.text) textInner.textContent = state.text;
     caseText.hidden = !hasText();
-    caseText.className = 'case-text layout-' + state.textLayout;
+    caseText.className = 'case-text layout-' + state.textLayout + (state.editing ? ' is-editing' : '');
     caseText.style.fontFamily = state.font;
     caseText.style.color = state.ink;
     // textPos is in screen pixels; turn it into the layout's own (possibly rotated) axes.
@@ -210,8 +210,9 @@
     $('#photo-controls').hidden = !single;
     preview.classList.toggle('is-draggable', !!single);
     caseText.classList.toggle('is-draggable', hasText());
-    $('#drag-hint').textContent = single && hasText() ? 'Tap the photo or the text to move, resize or rotate it.'
-      : single ? 'Tap the photo to move, zoom or rotate it.' : 'Tap the text to move, resize or rotate it.';
+    $('#drag-hint').textContent = state.editing ? 'Type on the case. Press Enter when you are done.'
+      : single && hasText() ? 'Tap the photo or the text to adjust it. Tap the text again to type.'
+      : single ? 'Tap the photo to move, zoom or rotate it.' : 'Tap the text to adjust it. Tap it again to type.';
     if (state.selected === 'photo' && !single) state.selected = null;
     if (state.selected === 'text' && !hasText()) state.selected = null;
     $('#add-text-btn').hidden = hasText();
@@ -407,13 +408,17 @@
   // (single-photo layouts only).
   let drag = null;
   preview.addEventListener('pointerdown', (e) => {
+    // While typing on the case, taps on the text place the caret instead of dragging.
+    if (state.editing && caseText.contains(e.target)) return;
+    if (state.editing) finishEditing();
     const onText = hasText() && caseText.contains(e.target);
+    const wasSelected = onText && state.selected === 'text';
     const canPhoto = hasPhotos() && !isCollage();
     const pick = onText ? 'text' : canPhoto ? 'photo' : null;
     if (state.selected !== pick) { state.selected = pick; render(); }
     if (!pick) return;
     const from = onText ? state.textPos : state.pos;
-    drag = { what: onText ? 'text' : 'photo', x: e.clientX - from.x, y: e.clientY - from.y };
+    drag = { what: onText ? 'text' : 'photo', x: e.clientX - from.x, y: e.clientY - from.y, sx: e.clientX, sy: e.clientY, wasSelected };
     preview.setPointerCapture(e.pointerId);
     e.preventDefault();
   });
@@ -423,7 +428,69 @@
     if (drag.what === 'text') moveText(next);
     else { state.pos = next; render(); }
   });
-  ['pointerup', 'pointercancel'].forEach((t) => preview.addEventListener(t, () => (drag = null)));
+  preview.addEventListener('pointerup', (e) => {
+    const d = drag;
+    drag = null;
+    if (d && d.what === 'text' && d.wasSelected && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 5) startEditing();
+  });
+  preview.addEventListener('pointercancel', () => (drag = null));
+  caseText.addEventListener('dblclick', () => { if (hasText()) startEditing(); });
+
+  // ---------- typing straight onto the case ----------
+  function placeCaretAtEnd(selectAll) {
+    const range = document.createRange();
+    range.selectNodeContents(textInner);
+    if (!selectAll) range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  function startEditing(selectAll = false) {
+    if (state.editing) return;
+    state.editing = true;
+    state.selected = 'text';
+    textInner.contentEditable = 'true';
+    textInner.setAttribute('role', 'textbox');
+    textInner.setAttribute('aria-label', 'Text on the case');
+    caseText.classList.add('is-editing');
+    textInner.focus();
+    placeCaretAtEnd(selectAll);
+    if (state.step !== STEP.text) openStep(STEP.text);
+    render();
+  }
+  function finishEditing() {
+    if (!state.editing) return;
+    state.editing = false;
+    textInner.contentEditable = 'false';
+    textInner.removeAttribute('role');
+    textInner.removeAttribute('aria-label');
+    caseText.classList.remove('is-editing');
+    window.getSelection().removeAllRanges();
+    if (!hasText()) state.selected = null;
+    textInner.textContent = state.text;
+    render();
+  }
+  // Keep the case, the Text step's field and the counter in step while typing.
+  textInner.addEventListener('input', () => {
+    let txt = textInner.textContent.replace(/[\r\n]+/g, ' ');
+    if (txt.length > textInput.maxLength) {
+      txt = txt.slice(0, textInput.maxLength);
+      textInner.textContent = txt;
+      placeCaretAtEnd(false);
+    }
+    textInput.value = txt;
+    textInput.dispatchEvent(new Event('input'));
+  });
+  textInner.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); finishEditing(); }
+  });
+  textInner.addEventListener('blur', () => finishEditing());
+  // Paste as plain text only.
+  textInner.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const plain = (e.clipboardData || window.clipboardData).getData('text').replace(/[\r\n]+/g, ' ');
+    document.execCommand('insertText', false, plain);
+  });
 
   $('#consent').addEventListener('change', (e) => {
     state.consent = e.target.checked;
@@ -509,13 +576,6 @@
       render();
     }
   }
-  const NUDGE = 6;
-  $$('[data-nudge]').forEach((b) =>
-    b.addEventListener('click', () => {
-      const [dx, dy] = b.dataset.nudge.split(',').map(Number);
-      moveText({ x: state.textPos.x + dx * NUDGE, y: state.textPos.y + dy * NUDGE });
-    })
-  );
   // ---------- text box: move, resize, rotate ----------
 
   function syncTextControls() {
@@ -602,7 +662,19 @@
   sizeIn.addEventListener('input', () => { state.textScale = sizeIn.value / 100; render(); });
   rotIn.addEventListener('input', () => { state.textRot = parseInt(rotIn.value, 10); render(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && state.selected) { state.selected = null; render(); }
+    if (e.key === 'Escape' && state.selected && !state.editing) { state.selected = null; render(); }
+    // Arrow keys nudge whatever is selected (6px, or 24px with Shift), for anyone who can't drag.
+    const dir = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '') || document.activeElement?.isContentEditable;
+    if (!dir || !state.selected || typing) return;
+    e.preventDefault();
+    const step = e.shiftKey ? 24 : 6;
+    if (state.selected === 'text') {
+      moveText({ x: state.textPos.x + dir[0] * step, y: state.textPos.y + dir[1] * step });
+    } else {
+      state.pos = { x: state.pos.x + dir[0] * step, y: state.pos.y + dir[1] * step };
+      render();
+    }
   });
   window.addEventListener('resize', placeSelBox);
   photo.addEventListener('load', placeSelBox); // its size is only known once the image has loaded
@@ -631,7 +703,9 @@
   // "Add text" under the case opens the Text step; "Remove text" clears it.
   $('#add-text-btn').addEventListener('click', () => {
     openStep(STEP.text);
-    textInput.focus();
+    textInput.value = 'Your text';
+    textInput.dispatchEvent(new Event('input'));
+    startEditing(true); // "Your text" is selected, so typing replaces it
   });
   $('#text-remove').addEventListener('click', () => {
     textInput.value = '';

@@ -257,17 +257,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                                     <input type="range" id="text-size" min="10" max="300" value="100"></label>
                                 <label class="slider-field" style="margin-top: .75rem;"><span>Angle <output id="text-rot-out">0°</output></span>
                                     <input type="range" id="text-rot" min="-180" max="180" value="0"></label>
-                                <div class="text-position" style="margin-top: 1rem;">
-                                    <div class="nudge-pad" role="group" aria-label="Move text">
-                                        <button type="button" class="nudge-btn nudge-up" data-nudge="0,-1" aria-label="Move text up"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
-                                        <button type="button" class="nudge-btn nudge-left" data-nudge="-1,0" aria-label="Move text left"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
-                                        <button type="button" class="nudge-btn nudge-right" data-nudge="1,0" aria-label="Move text right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-                                        <button type="button" class="nudge-btn nudge-down" data-nudge="0,1" aria-label="Move text down"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-                                    </div>
-                                    <div>
-                                        <p class="field-note" style="margin:0 0 .5rem;">Move the text a little at a time.</p>
-                                        <button type="button" class="text-link small" id="text-reset">Reset size, angle and position</button>
-                                    </div>
+                                <button type="button" class="text-link small" id="text-reset" style="margin-top: 1rem;">Reset size, angle and position</button>
                                 </div>
 
                             <?php else: ?>
