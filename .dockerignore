@@ -1,0 +1,12 @@
+.git
+.claude
+.DS_Store
+core/db_cred.php
+core/app_config.php
+database/backups
+uploads/private/designs/*
+uploads/private/sources/*
+uploads/private/drafts/*
+uploads/public/community/*
+!uploads/**/.gitkeep
+!uploads/public/community/seed
