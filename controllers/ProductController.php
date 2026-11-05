@@ -8,6 +8,8 @@ require_once __DIR__ . "/../classes/ProductClass.php";
  */
 class ProductController
 {
+    const LATEST_DESIGNS = 4; // how many cases the home page row shows
+
     private $productModel;
 
     public function __construct()
@@ -64,9 +66,30 @@ class ProductController
         return $this->productModel->getProducts($filters);
     }
 
-    public function getFeaturedProducts($limit = 4)
+    public function getFeaturedProducts($limit = self::LATEST_DESIGNS)
     {
-        return $this->productModel->getProducts(['limit' => $limit]);
+        return $this->productModel->getLatestDesigns($limit);
+    }
+
+    public function countLowStockVariants($threshold = 3)
+    {
+        return $this->productModel->countLowStockVariants($threshold);
+    }
+
+    public function countFeatured()
+    {
+        return $this->productModel->countFeatured();
+    }
+
+    /** Add a case to the home page's Latest designs, or take it off. */
+    public function setFeatured($productId, $featured)
+    {
+        if ($featured && $this->productModel->countFeatured() >= self::LATEST_DESIGNS) {
+            return ['success' => false, 'error' => 'Latest designs is full. Remove a case first, then add this one.'];
+        }
+        return $this->productModel->setFeatured($productId, $featured)
+            ? ['success' => true]
+            : ['success' => false, 'error' => 'Unable to update Latest designs. Try again.'];
     }
 
     public function getProductBySlug($slug)

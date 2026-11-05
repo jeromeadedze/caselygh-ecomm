@@ -86,6 +86,7 @@ CREATE TABLE `products` (
   `product_image` varchar(255) DEFAULT NULL,
   `product_keywords` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `featured_at` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`product_id`),
   UNIQUE KEY `product_slug` (`product_slug`),

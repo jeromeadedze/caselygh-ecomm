@@ -18,6 +18,8 @@ $editing = isset($_GET['edit']) ? $productCtrl->getProductById((int) $_GET['edit
 $variants = $editing ? $productCtrl->getVariantsForProduct($editing['product_id']) : [];
 $chosenModels = array_unique(array_map('intval', array_column($variants, 'model_id')));
 $products = $productCtrl->getAllProductsAdmin();
+$latestCount = $productCtrl->countFeatured();
+$latestMax = ProductController::LATEST_DESIGNS;
 ?>
 
 <div class="container page">
@@ -95,7 +97,7 @@ $products = $productCtrl->getAllProductsAdmin();
                 <form action="<?php echo $ROOT_DIR; ?>/actions/update_stock_action.php" method="POST">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="product_id" value="<?php echo (int) $editing['product_id']; ?>">
-                    <div class="table-wrap">
+                    <div class="table-wrap" tabindex="0" role="region" aria-label="Stock per phone table">
                         <table class="table">
                             <thead><tr><th scope="col">Phone</th><th scope="col">Type</th><th scope="col">Price</th><th scope="col">In stock</th></tr></thead>
                             <tbody>
@@ -116,22 +118,31 @@ $products = $productCtrl->getAllProductsAdmin();
             </section>
         <?php endif; ?>
 
-        <section>
+        <section id="all-cases">
             <h2 class="section-title-sm">All cases</h2>
-            <div class="table-wrap">
+            <p class="muted small latest-note"><strong>Latest designs on the home page: <?php echo $latestCount; ?> of <?php echo $latestMax; ?> chosen.</strong> The newest cases fill any empty places.</p>
+            <div class="table-wrap" tabindex="0" role="region" aria-label="All cases table">
                 <table class="table">
                     <thead><tr><th scope="col"><span class="visually-hidden">Photo</span></th><th scope="col">Case</th><th scope="col">Price</th><th scope="col">Phones</th><th scope="col">Stock</th><th scope="col">Shown</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
                     <tbody>
                     <?php foreach ($products as $p): ?>
                         <tr>
                             <td><?php if ($p['product_image']): ?><img class="admin-thumb" src="<?php echo $ROOT_DIR; ?>/images/products/<?php echo e($p['product_image']); ?>" alt=""><?php endif; ?></td>
-                            <td><strong><?php echo e($p['product_title']); ?></strong><br><span class="muted small"><?php echo e($p['collection_name']); ?></span></td>
+                            <td><strong><?php echo e($p['product_title']); ?></strong><br><span class="muted small"><?php echo e($p['collection_name']); ?></span><?php if ($p['featured_at'] && $p['is_active']): ?><br><span class="status status-approved">Latest design</span><?php endif; ?></td>
                             <td><?php echo ghs($p['product_price']); ?></td>
                             <td><?php echo (int) $p['model_count']; ?></td>
                             <td><?php echo (int) $p['total_stock']; ?></td>
                             <td><span class="status <?php echo $p['is_active'] ? 'status-approved' : 'status-hidden'; ?>"><?php echo $p['is_active'] ? 'Shown' : 'Hidden'; ?></span></td>
                             <td>
                                 <div class="row-actions">
+                                    <?php if ($p['is_active']): ?>
+                                        <form action="<?php echo $ROOT_DIR; ?>/actions/toggle_latest_action.php" method="POST">
+                                            <?php echo csrf_field(); ?>
+                                            <input type="hidden" name="product_id" value="<?php echo (int) $p['product_id']; ?>">
+                                            <input type="hidden" name="featured" value="<?php echo $p['featured_at'] ? 0 : 1; ?>">
+                                            <button type="submit" class="btn btn-outline btn-xs"><?php echo $p['featured_at'] ? 'Remove from latest' : 'Add to latest'; ?><span class="visually-hidden"> <?php echo e($p['product_title']); ?></span></button>
+                                        </form>
+                                    <?php endif; ?>
                                     <a href="products.php?edit=<?php echo (int) $p['product_id']; ?>" class="btn btn-outline btn-xs">Edit<span class="visually-hidden"> <?php echo e($p['product_title']); ?></span></a>
                                     <form action="<?php echo $ROOT_DIR; ?>/actions/toggle_product_action.php" method="POST">
                                         <?php echo csrf_field(); ?>

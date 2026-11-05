@@ -27,14 +27,14 @@ $orders = $orderCtrl->getAllOrders($status ?: null);
     <?php if (!$orders): ?>
         <p class="muted"><?php echo $status ? 'No orders with this status.' : 'No orders yet. Paid orders appear here after Paystack confirms the payment.'; ?></p>
     <?php else: ?>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Orders table">
             <table class="table">
                 <thead>
                 <tr><th scope="col">Order</th><th scope="col">Customer &amp; delivery</th><th scope="col">Items</th><th scope="col">Total</th><th scope="col">Status</th></tr>
                 </thead>
                 <tbody>
                 <?php foreach ($orders as $o): ?>
-                    <tr>
+                    <tr id="order-<?php echo (int) $o['order_id']; ?>">
                         <td>
                             <strong><?php echo e($o['invoice_no']); ?></strong><br>
                             <span class="muted small"><?php echo date('j M Y, H:i', strtotime($o['order_date'])); ?></span>

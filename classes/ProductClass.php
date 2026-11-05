@@ -154,6 +154,29 @@ class ProductClass extends Database
         return $this->execute("UPDATE products SET is_active = ? WHERE product_id = ?", [$active ? 1 : 0, $id]);
     }
 
+    // Home page row: cases the team chose come first, then the newest fill any gaps.
+    public function getLatestDesigns($limit)
+    {
+        $sql = "SELECT p.*, c.collection_name, c.collection_slug
+                FROM products p JOIN collections c ON c.collection_id = p.collection_id
+                WHERE p.is_active = 1
+                ORDER BY p.featured_at IS NULL, p.featured_at DESC, p.created_at DESC, p.product_id DESC
+                LIMIT " . (int) $limit;
+        return $this->fetchAll($sql);
+    }
+
+    public function countFeatured()
+    {
+        $row = $this->fetchOne("SELECT COUNT(*) AS total FROM products WHERE featured_at IS NOT NULL AND is_active = 1");
+        return (int) ($row['total'] ?? 0);
+    }
+
+    public function setFeatured($id, $featured)
+    {
+        $sql = "UPDATE products SET featured_at = " . ($featured ? "NOW()" : "NULL") . " WHERE product_id = ?";
+        return $this->execute($sql, [$id]);
+    }
+
     // ---------- Variants ----------
     public function getVariantsForProduct($productId)
     {
@@ -226,12 +249,21 @@ class ProductClass extends Database
 
     public function getLowStockVariants($threshold = 3, $limit = 10)
     {
-        $sql = "SELECT v.variant_id, v.stock, v.case_type, p.product_title, m.model_name
+        $sql = "SELECT v.variant_id, v.stock, v.case_type, p.product_id, p.product_title, m.model_name
                 FROM product_variants v
                 JOIN products p ON p.product_id = v.product_id AND p.is_active = 1
                 JOIN phone_models m ON m.model_id = v.model_id
                 WHERE v.stock <= ?
-                ORDER BY v.stock ASC LIMIT " . (int) $limit;
+                ORDER BY v.stock ASC, p.product_title, m.sort_order, v.case_type LIMIT " . (int) $limit;
         return $this->fetchAll($sql, [$threshold]);
+    }
+
+    public function countLowStockVariants($threshold = 3)
+    {
+        $sql = "SELECT COUNT(*) AS total FROM product_variants v
+                JOIN products p ON p.product_id = v.product_id AND p.is_active = 1
+                WHERE v.stock <= ?";
+        $row = $this->fetchOne($sql, [$threshold]);
+        return (int) ($row['total'] ?? 0);
     }
 }

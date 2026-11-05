@@ -40,7 +40,7 @@ $drafts = (new DraftController())->getDrafts(get_user_id());
                 <a href="<?php echo $ROOT_DIR; ?>/views/shop.php" class="btn btn-primary">Find a case</a>
             </div>
         <?php else: ?>
-            <div class="table-wrap">
+            <div class="table-wrap" tabindex="0" role="region" aria-label="My orders table">
                 <table class="table">
                     <thead><tr><th scope="col">Order</th><th scope="col">Date</th><th scope="col">Items</th><th scope="col">Total</th><th scope="col">Status</th></tr></thead>
                     <tbody>

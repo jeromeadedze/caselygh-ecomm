@@ -57,7 +57,7 @@ $navLinks = [
 
             <div class="header-actions">
                 <?php if (is_admin()): ?>
-                    <a href="<?php echo $ROOT_DIR; ?>/views/admin/dashboard.php" class="header-link">Admin</a>
+                    <a href="<?php echo $ROOT_DIR; ?>/views/admin/dashboard.php" class="header-link<?php echo isset($admin_page) ? ' is-active' : ''; ?>"<?php echo isset($admin_page) ? ' aria-current="true"' : ''; ?>>Admin</a>
                 <?php endif; ?>
                 <?php if (is_logged_in()): ?>
                     <a href="<?php echo $ROOT_DIR; ?>/views/account.php" class="header-link">Account</a>
