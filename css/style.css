@@ -224,7 +224,7 @@ main:focus { outline: none; }
    The whole ring turns slowly; cases fade and settle in one after another. */
 /* overflow: the spinner is a square, so its empty corners stick out as it turns and
    would make phones scroll sideways. The cases themselves stay inside this box. */
-.hero-ring { --r: 38cqi; --case-w: 10.5cqi; position: relative; aspect-ratio: 1; width: 100%; overflow: hidden; }
+.hero-ring { --r: 38cqi; --case-w: 10.5cqi; container-type: inline-size; position: relative; aspect-ratio: 1; width: 100%; overflow: hidden; }
 .hero-ring-spin { position: absolute; inset: 0; }
 .hero-slot {
   position: absolute; left: 50%; top: 50%;
@@ -264,7 +264,8 @@ main:focus { outline: none; }
    the text below the ring too, instead of running it across the C. */
 @media (max-width: 56.1875em) {
   .hero-media { max-width: 30rem; }
-  .hero-ring { --r: 34cqi; --case-w: 15cqi; }
+  /* The ring takes the height the text doesn't, so the button and Instagram line stay on the first screen. */
+  .hero-ring { --r: 34cqi; --case-w: 15cqi; width: min(100%, max(10.5rem, calc(100svh - 27.5rem))); margin-inline: auto; }
   .hero-copy { position: static; margin-top: .5rem; }
 }
 /* Tablets: a smaller ring keeps the call to action in the first screen. */

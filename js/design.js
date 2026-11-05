@@ -1114,7 +1114,7 @@
         localStorage.setItem('casely-minimized', JSON.stringify({ model: state.modelName, at: Date.now() }));
         sessionStorage.setItem('casely-tab-new', '1');
       }
-    } catch (_) { /* the design still reopens from Custom design */ }
+    } catch (_) { /* the design still reopens from Customize */ }
     let target = closeLink.href;
     try {
       const from = new URL(document.referrer);

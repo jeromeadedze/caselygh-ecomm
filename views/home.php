@@ -13,6 +13,7 @@ require_once __DIR__ . '/../controllers/ProductController.php';
 $productCtrl = new ProductController();
 $collections = $productCtrl->getCollections();
 $bestSellers = $productCtrl->getFeaturedProducts(4);
+$lowestPrice = $productCtrl->getLowestPrice();
 $modelsByBrand = $productCtrl->getModelsByBrand();
 
 $designUrl = $ROOT_DIR . '/views/design.php';
@@ -70,10 +71,9 @@ $faqSchema = [
         <div class="hero-copy">
             <span class="script hero-script">Custom cases</span>
             <h1>A phone case<br>made just for you</h1>
-            <p class="hero-sub">Add your photos or name and see it live on your exact phone. From <?php echo ghs(CUSTOM_CASE_PRICE); ?>.</p>
+            <p class="hero-sub"><?php if ($lowestPrice !== null): ?>Ready-made designs from <?php echo ghs($lowestPrice); ?>, or customize your own from <?php echo ghs(CUSTOM_CASE_PRICE); ?>.<?php else: ?>Customize your own case from <?php echo ghs(CUSTOM_CASE_PRICE); ?>.<?php endif; ?></p>
             <div class="hero-actions">
-                <a href="<?php echo $designUrl; ?>" class="btn btn-primary">Design your case</a>
-                <a href="#shop" class="btn btn-outline">Shop our designs</a>
+                <a href="#shop" class="btn btn-primary">Shop our designs</a>
             </div>
             <p class="hero-proof"><a href="https://www.instagram.com/casely.gh/" target="_blank" rel="noopener">2,300+ followers on Instagram<span class="visually-hidden"> (opens in a new tab)</span></a></p>
         </div>
@@ -81,7 +81,6 @@ $faqSchema = [
 </section>
 
 <section class="container section" id="shop" data-reveal>
-    <h2 class="section-title">Or choose one of our designs</h2>
     <form action="<?php echo $ROOT_DIR; ?>/views/shop.php" method="GET" class="phone-finder">
         <p class="phone-finder-title">Find cases for your phone</p>
         <label class="field">
@@ -101,7 +100,7 @@ $faqSchema = [
     </form>
 
     <div class="section-head shop-best">
-        <h3 class="section-title-sm">Latest designs</h3>
+        <h2 class="section-title-sm">Latest designs</h2>
         <a href="<?php echo $ROOT_DIR; ?>/views/shop.php" class="text-link">See all cases &rarr;</a>
     </div>
     <div class="product-grid cols-4 shop-grid">
@@ -110,7 +109,7 @@ $faqSchema = [
         <?php endforeach; ?>
     </div>
 
-    <h3 class="section-title-sm shop-collections">Shop by collection</h3>
+    <h2 class="section-title-sm shop-collections">Shop by collection</h2>
     <div class="collection-grid">
         <?php foreach ($collections as $c): ?>
             <a href="<?php echo $ROOT_DIR; ?>/views/shop.php?collection=<?php echo urlencode($c['collection_slug']); ?>" class="collection-tile tone-<?php echo e($c['collection_tone']); ?>">

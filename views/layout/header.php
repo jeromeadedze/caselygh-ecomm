@@ -16,7 +16,7 @@ $active_nav = $active_nav ?? '';
 
 $navLinks = [
     'shop' => ['Shop', $ROOT_DIR . '/views/shop.php'],
-    'design' => ['Custom design', $ROOT_DIR . '/views/design.php'],
+    'design' => ['Customize', $ROOT_DIR . '/views/design.php'],
     'community' => ['Community', $ROOT_DIR . '/views/community.php'],
 ];
 ?>

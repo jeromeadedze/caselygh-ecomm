@@ -71,6 +71,11 @@ class ProductController
         return $this->productModel->countProducts($filters);
     }
 
+    public function getLowestPrice()
+    {
+        return $this->productModel->getLowestPrice();
+    }
+
     public function getFeaturedProducts($limit = self::LATEST_DESIGNS)
     {
         return $this->productModel->getLatestDesigns($limit);

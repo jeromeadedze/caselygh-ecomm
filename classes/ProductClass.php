@@ -171,6 +171,17 @@ class ProductClass extends Database
     }
 
     // Home page row: cases the team chose come first, then the newest fill any gaps.
+    // The lowest price a customer can buy a listed case for right now. Null if none are in stock.
+    public function getLowestPrice()
+    {
+        $row = $this->fetchOne(
+            "SELECT MIN(v.variant_price) AS lowest FROM product_variants v
+             JOIN products p ON p.product_id = v.product_id AND p.is_active = 1
+             WHERE v.stock > 0"
+        );
+        return isset($row['lowest']) ? (float) $row['lowest'] : null;
+    }
+
     public function getLatestDesigns($limit)
     {
         $sql = "SELECT p.*, c.collection_name, c.collection_slug
