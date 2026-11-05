@@ -25,11 +25,8 @@ class CustomDesignController
      * $designFile = the PNG the studio exported; $sourceFile = the customer's photo (optional).
      * Returns ['success' => bool, 'design_id' => int, 'error' => string]
      */
-    public function saveDesign($cartKey, $customerId, $modelId, $caseType, $text, $settings, $consent, $designFile, $sourceFile)
+    public function saveDesign($cartKey, $customerId, $modelId, $caseType, $text, $settings, $designFile, $sourceFile)
     {
-        if (!$consent) {
-            return ['success' => false, 'error' => 'Tick the consent box in the Photo step first.'];
-        }
         if (!in_array($caseType, ['Standard', 'Tough'], true)) {
             return ['success' => false, 'error' => 'Choose a case type.'];
         }

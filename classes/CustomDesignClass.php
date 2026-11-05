@@ -13,7 +13,7 @@ class CustomDesignClass extends Database
     {
         $sql = "INSERT INTO custom_designs
                 (cart_key, customer_id, model_id, case_type, design_image, source_image, design_text, settings, price, consent_given)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
         $ok = $this->execute($sql, [$cartKey, $customerId, $modelId, $caseType, $designImage, $sourceImage, $text, $settingsJson, $price]);
         return $ok ? (int) $this->getLastInsertId() : false;
     }

@@ -24,7 +24,6 @@ $result = (new CustomDesignController())->saveDesign(
     $_POST['case_type'] ?? '',
     $_POST['design_text'] ?? '',
     $settings,
-    ($_POST['consent'] ?? '') === '1',
     $_FILES['design_png'] ?? null,
     $_FILES['source_photo'] ?? null
 );

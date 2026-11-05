@@ -25,7 +25,7 @@
     Film: [['contrast', 1.25, 1], ['saturate', 1.2, 1], ['brightness', 1.08, 1], ['sepia', 0.15, 0]],
   };
   const COLLAGES = { 'grid-2x6': [2, 6], 'grid-3x7': [3, 7], 'grid-4x9': [4, 9] };
-  const STEP = { device: 0, type: 1, photo: 2, layout: 3, filters: 4, text: 5, fonts: 6, textLayout: 7 };
+  const STEP = { device: 0, type: 1, photo: 2, layout: 3, filters: 4, text: 5 };
   const STEP_COUNT = $$('.step').length;
   const DEFAULT_STRENGTH = 80;
 
@@ -51,7 +51,6 @@
     ink: '#FFFFFF',
     bg: '#1A1418',
     textLayout: 'centre', // horizontal by default; Vertical is one of the Text layout options
-    consent: false,
     saving: false,
   };
 
@@ -108,7 +107,6 @@
   function lockedReason(i) {
     if (i === STEP.layout && !hasPhotos()) return 'Add a photo first';
     if (i === STEP.filters && !hasPhotos()) return 'Add a photo first';
-    if ((i === STEP.fonts || i === STEP.textLayout) && !hasText()) return 'Add text first';
     return '';
   }
 
@@ -128,7 +126,7 @@
       section.classList.toggle('is-open', open);
       // Bring the opened step into view inside the scrolling steps list.
       if (open && state.ready) head.scrollIntoView({ block: 'nearest' });
-      if (open && state.ready && (idx === STEP.text || idx === STEP.textLayout) && hasText()) state.selected = 'text';
+      if (open && state.ready && idx === STEP.text && hasText()) state.selected = 'text';
       if (open && state.ready && (idx === STEP.photo || idx === STEP.layout) && hasPhotos() && !isCollage()) state.selected = 'photo';
     });
     const shown = Math.max(i, 0) + 1;
@@ -515,10 +513,6 @@
     document.execCommand('insertText', false, plain);
   });
 
-  $('#consent').addEventListener('change', (e) => {
-    state.consent = e.target.checked;
-    if (state.consent) showError('');
-  });
 
   // ---------- step 4: layout ----------
   const layoutBtns = $$('[data-layout]');
@@ -728,7 +722,7 @@
     updateCount();
     if (had !== hasText()) {
       state.selected = hasText() ? 'text' : null;
-      refreshSteps(); // Fonts and Text layout unlock once there is text
+      refreshSteps();
     }
     render();
   });
@@ -893,12 +887,6 @@
       showError('Add a photo or some text to design your case.');
       return;
     }
-    if (!state.consent) {
-      openStep(STEP.photo);
-      showError('Tick the consent box in the Photo step first.');
-      $('#consent').focus();
-      return;
-    }
 
     state.saving = true;
     const btn = $('#add-btn');
@@ -914,7 +902,6 @@
       form.append('model_id', state.modelId);
       form.append('case_type', state.caseType);
       form.append('design_text', hasText() ? state.text : '');
-      form.append('consent', state.consent ? '1' : '0');
       form.append('settings', JSON.stringify({
         layout: state.layout, photoCount: state.photos.length,
         filter: state.filter, filterStrength: state.strength, font: state.font,

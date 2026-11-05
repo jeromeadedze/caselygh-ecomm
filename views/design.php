@@ -38,7 +38,7 @@ if (is_logged_in()) {
 }
 $myDesignCount = count($myDrafts) + count($myDesigns);
 
-$steps = ['Device model', 'Case type', 'Photo', 'Layout', 'Filters', 'Text', 'Fonts', 'Text layout'];
+$steps = ['Device model', 'Case type', 'Photo', 'Layout', 'Filters', 'Text'];
 $fonts = [
     ['Script', "Pacifico, cursive"],
     ['Handwritten', "Caveat, cursive"],
@@ -225,11 +225,6 @@ define('MAX_STUDIO_PHOTOS', 36);
                                     <button type="button" class="text-link" id="photo-reset">Reset position</button>
                                 </div>
 
-                                <label class="consent">
-                                    <input type="checkbox" id="consent">
-                                    <span>I own any photos in this design, and it has no copyrighted characters, logos or offensive content. The Casely team checks every design before printing.</span>
-                                </label>
-
                             <?php elseif ($i === 3): ?>
                                 <p class="pick-group-label">One photo</p>
                                 <div class="pick-grid cols-3">
@@ -259,14 +254,6 @@ define('MAX_STUDIO_PHOTOS', 36);
                                         <input type="range" id="strength" min="0" max="100" value="80"></label>
                                     <button type="button" class="text-link" id="filter-reset">Reset</button>
                                 </div>
-
-                            <?php elseif ($i === 6): ?>
-                                <div class="pick-grid">
-                                    <?php foreach ($fonts as [$label2, $css]): ?>
-                                        <button type="button" class="pick font-pick <?php echo $label2 === 'Bold serif' ? 'is-on' : ''; ?>" data-font="<?php echo e($css); ?>" style="font-family: <?php echo e($css); ?>"><?php echo $label2; ?></button>
-                                    <?php endforeach; ?>
-                                </div>
-
                             <?php elseif ($i === 5): ?>
                                 <label class="field">
                                     <span class="field-row">Name or initials <output id="text-count" class="muted">0/14</output></span>
@@ -274,6 +261,18 @@ define('MAX_STUDIO_PHOTOS', 36);
                                 </label>
                                 <p class="field-note" id="text-optional-note">Text is optional. Leave this empty for a case with no text.</p>
                                 <button type="button" class="text-link small" id="text-remove" hidden>Remove text</button>
+                                <p class="swatch-label">Font</p>
+                                <div class="pick-grid">
+                                    <?php foreach ($fonts as [$label2, $css]): ?>
+                                        <button type="button" class="pick font-pick <?php echo $label2 === 'Bold serif' ? 'is-on' : ''; ?>" data-font="<?php echo e($css); ?>" style="font-family: <?php echo e($css); ?>"><?php echo $label2; ?></button>
+                                    <?php endforeach; ?>
+                                </div>
+                                <p class="swatch-label">Text layout</p>
+                                <div class="pick-grid">
+                                    <?php foreach (['Centre', 'Bottom', 'Corner', 'Vertical'] as $tl): ?>
+                                        <button type="button" class="pick <?php echo $tl === 'Centre' ? 'is-on' : ''; ?>" data-text-layout="<?php echo strtolower($tl); ?>"><?php echo $tl; ?></button>
+                                    <?php endforeach; ?>
+                                </div>
                                 <p class="swatch-label">Text colour</p>
                                 <div class="swatches" role="group" aria-label="Text colour">
                                     <?php foreach ($inks as $name => $hex): ?>
@@ -287,13 +286,6 @@ define('MAX_STUDIO_PHOTOS', 36);
                                 <label class="slider-field" style="margin-top: .75rem;"><span>Angle <output id="text-rot-out">0°</output></span>
                                     <input type="range" id="text-rot" min="-180" max="180" value="0"></label>
                                 <button type="button" class="text-link small" id="text-reset" style="margin-top: 1rem;">Reset size, angle and position</button>
-
-                            <?php else: ?>
-                                <div class="pick-grid">
-                                    <?php foreach (['Centre', 'Bottom', 'Corner', 'Vertical'] as $tl): ?>
-                                        <button type="button" class="pick <?php echo $tl === 'Centre' ? 'is-on' : ''; ?>" data-text-layout="<?php echo strtolower($tl); ?>"><?php echo $tl; ?></button>
-                                    <?php endforeach; ?>
-                                </div>
                             <?php endif; ?>
                         </div>
                     </section>
@@ -304,7 +296,7 @@ define('MAX_STUDIO_PHOTOS', 36);
                 <button type="button" class="step-arrow" id="step-prev" aria-label="Previous step">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
                 </button>
-                <span id="step-count">01/08</span>
+                <span id="step-count">01/06</span>
                 <button type="button" class="step-arrow" id="step-next" aria-label="Next step">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
