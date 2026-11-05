@@ -54,7 +54,8 @@ require_once __DIR__ . '/layout/header.php';
     </div>
 
     <div class="button-row">
-        <a href="<?php echo $ROOT_DIR; ?>/views/account.php" class="btn btn-dark">My orders</a>
+        <a href="<?php echo e($orderCtrl->trackingUrl($order, $ROOT_DIR)); ?>" class="btn btn-dark">Track this order</a>
+        <a href="<?php echo $ROOT_DIR; ?>/views/account.php" class="btn btn-outline">My orders</a>
         <a href="<?php echo $ROOT_DIR; ?>/views/shop.php" class="btn btn-outline">Keep shopping</a>
     </div>
 </div>

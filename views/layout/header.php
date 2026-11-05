@@ -27,6 +27,7 @@ $navLinks = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo e($page_title); ?></title>
     <meta name="description" content="<?php echo e($page_description); ?>">
+    <?php if (!empty($page_noindex)): ?><meta name="robots" content="noindex"><?php endif; ?>
     <meta property="og:title" content="<?php echo e($page_title); ?>">
     <meta property="og:description" content="<?php echo e($page_description); ?>">
     <meta property="og:type" content="website">

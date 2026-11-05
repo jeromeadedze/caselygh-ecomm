@@ -40,7 +40,8 @@ $orders = $orderCtrl->getAllOrders($status ?: null, $perPage, ($page - 1) * $per
                     <tr id="order-<?php echo (int) $o['order_id']; ?>">
                         <td>
                             <strong><?php echo e($o['invoice_no']); ?></strong><br>
-                            <span class="muted small"><?php echo date('j M Y, H:i', strtotime($o['order_date'])); ?></span>
+                            <span class="muted small"><?php echo date('j M Y, H:i', strtotime($o['order_date'])); ?></span><br>
+                            <a href="<?php echo e($orderCtrl->trackingUrl($o, $ROOT_DIR)); ?>" class="text-link small">Tracking page<span class="visually-hidden"> for <?php echo e($o['invoice_no']); ?></span></a>
                         </td>
                         <td>
                             <?php echo e($o['customer_name']); ?><br>

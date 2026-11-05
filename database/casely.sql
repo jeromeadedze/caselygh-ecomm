@@ -20,6 +20,7 @@ DROP TABLE IF EXISTS `reviews`;
 DROP TABLE IF EXISTS `community_posts`;
 DROP TABLE IF EXISTS `payments`;
 DROP TABLE IF EXISTS `orderdetails`;
+DROP TABLE IF EXISTS `order_status_history`;
 DROP TABLE IF EXISTS `orders`;
 DROP TABLE IF EXISTS `cart`;
 DROP TABLE IF EXISTS `design_drafts`;
@@ -183,6 +184,7 @@ CREATE TABLE `orders` (
   `order_id` int(11) NOT NULL AUTO_INCREMENT,
   `customer_id` int(11) NOT NULL,
   `invoice_no` varchar(20) NOT NULL,
+  `tracking_token` char(32) DEFAULT NULL,
   `order_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `order_status` varchar(30) NOT NULL DEFAULT 'pending_payment',
   `delivery_name` varchar(100) NOT NULL,
@@ -194,8 +196,20 @@ CREATE TABLE `orders` (
   `total` decimal(10,2) NOT NULL,
   PRIMARY KEY (`order_id`),
   UNIQUE KEY `invoice_no` (`invoice_no`),
+  UNIQUE KEY `tracking_token` (`tracking_token`),
   KEY `customer_id` (`customer_id`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- When each order reached each status, for the dates on the tracking page.
+CREATE TABLE `order_status_history` (
+  `history_id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NOT NULL,
+  `status` varchar(30) NOT NULL,
+  `changed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`history_id`),
+  KEY `order_id` (`order_id`),
+  CONSTRAINT `order_status_history_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- item_name and unit_price are copied at purchase time, so later price

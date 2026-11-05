@@ -7,7 +7,8 @@ require_once __DIR__ . '/../controllers/OrderController.php';
 require_once __DIR__ . '/../controllers/CommunityController.php';
 require_once __DIR__ . '/../controllers/DraftController.php';
 
-$orders = (new OrderController())->getOrdersByCustomer(get_user_id());
+$orderCtrl = new OrderController();
+$orders = $orderCtrl->getOrdersByCustomer(get_user_id());
 $posts = (new CommunityController())->getPostsByCustomer(get_user_id());
 $rewardCodes = array_filter(array_column($posts, 'reward_code'));
 $drafts = (new DraftController())->getDrafts(get_user_id());
@@ -50,7 +51,10 @@ $drafts = (new DraftController())->getDrafts(get_user_id());
                             <td><?php echo date('j M Y', strtotime($o['order_date'])); ?></td>
                             <td><?php echo (int) $o['item_count']; ?></td>
                             <td><?php echo ghs($o['total']); ?></td>
-                            <td><span class="status status-<?php echo e($o['order_status']); ?>"><?php echo order_status_label($o['order_status']); ?></span></td>
+                            <td>
+                                <span class="status status-<?php echo e($o['order_status']); ?>"><?php echo order_status_label($o['order_status']); ?></span>
+                                <a href="<?php echo e($orderCtrl->trackingUrl($o, $ROOT_DIR)); ?>" class="text-link small">Track<span class="visually-hidden"> order <?php echo e($o['invoice_no']); ?></span></a>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>

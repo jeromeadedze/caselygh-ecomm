@@ -45,6 +45,24 @@ class OrderController
         return $this->orderModel->getOrder($orderId);
     }
 
+    // Tokens are 32 hex characters, so anything else can't be an order.
+    public function getOrderByToken($token)
+    {
+        return is_string($token) && preg_match('/^[a-f0-9]{32}$/', $token) ? $this->orderModel->getOrderByToken($token) : null;
+    }
+
+    public function getStatusDates($orderId)
+    {
+        return $this->orderModel->getStatusDates($orderId);
+    }
+
+    // Link to an order's tracking page. $order needs order_id and tracking_token.
+    public function trackingUrl(array $order, $root)
+    {
+        $token = $order['tracking_token'] ?: $this->orderModel->ensureTrackingToken($order['order_id']);
+        return $root . '/views/track.php?t=' . $token;
+    }
+
     public function getOrderItems($orderId)
     {
         return $this->orderModel->getOrderItems($orderId);

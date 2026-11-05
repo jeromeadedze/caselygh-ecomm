@@ -648,6 +648,20 @@ select.input {
 .order-steps { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
 .order-step { font-size: .8rem; font-weight: 700; padding: .3rem .8rem; border-radius: 999px; background: var(--muted); color: var(--muted-foreground); }
 .order-step.is-done { background: var(--secondary); color: var(--secondary-foreground); }
+
+/* Tracking page timeline */
+.track-steps { list-style: none; margin: 0; padding: 0; }
+.track-step { position: relative; display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); column-gap: .75rem; padding-block-end: 1.25rem; }
+.track-step:last-child { padding-block-end: 0; }
+.track-step:not(:last-child)::before { content: ""; position: absolute; inset-block: 1.5rem 0; inset-inline-start: calc(.75rem - 1px); width: 2px; background: var(--border); }
+.track-step.is-done:not(.is-current)::before { background: var(--primary-strong); }
+.track-marker { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border: 2px solid var(--input); border-radius: 50%; background: var(--card); color: var(--primary-foreground); }
+.track-step.is-done .track-marker { background: var(--primary-strong); border-color: var(--primary-strong); }
+.track-text { display: grid; min-width: 0; }
+.track-step:not(.is-done) .track-label { color: var(--muted-foreground); }
+.track-step.is-current .track-label { font-weight: 700; }
+.track-time { font-size: .85rem; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.track-items { margin: .5rem 0 0; padding: 0; list-style: none; display: grid; gap: .35rem; overflow-wrap: anywhere; }
 @media (min-width: 768px) { .cart-layout { grid-template-columns: minmax(0, 1fr) 20rem; } }
 
 /* ---------- Community ---------- */

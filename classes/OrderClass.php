@@ -24,11 +24,11 @@ class OrderClass extends Database
             $this->beginTransaction();
 
             $invoice = $this->newInvoiceNo();
-            $sql = "INSERT INTO orders (customer_id, invoice_no, order_status, delivery_name, delivery_phone,
+            $sql = "INSERT INTO orders (customer_id, invoice_no, tracking_token, order_status, delivery_name, delivery_phone,
                                         delivery_address, delivery_city, subtotal, delivery_fee, total)
-                    VALUES (?, ?, 'pending_payment', ?, ?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, 'pending_payment', ?, ?, ?, ?, ?, ?, ?)";
             $this->execute($sql, [
-                $customerId, $invoice, $delivery['name'], $delivery['phone'],
+                $customerId, $invoice, self::newTrackingToken(), $delivery['name'], $delivery['phone'],
                 $delivery['address'], $delivery['city'], $subtotal, $deliveryFee, $total,
             ]);
             $orderId = (int) $this->getLastInsertId();
@@ -59,6 +59,32 @@ class OrderClass extends Database
             $invoice = 'CSL-' . random_int(10000000, 99999999);
         } while ($this->fetchOne("SELECT order_id FROM orders WHERE invoice_no = ?", [$invoice]));
         return $invoice;
+    }
+
+    // The secret part of a tracking link. Long and random, so links can't be guessed.
+    private static function newTrackingToken()
+    {
+        return bin2hex(random_bytes(16));
+    }
+
+    public function getOrderByToken($token)
+    {
+        return $this->fetchOne("SELECT * FROM orders WHERE tracking_token = ?", [$token]);
+    }
+
+    // Orders from before tracking have no token yet. Returns the order's token, making one if needed.
+    public function ensureTrackingToken($orderId)
+    {
+        $this->execute("UPDATE orders SET tracking_token = ? WHERE order_id = ? AND tracking_token IS NULL", [self::newTrackingToken(), $orderId]);
+        $row = $this->fetchOne("SELECT tracking_token FROM orders WHERE order_id = ?", [$orderId]);
+        return $row['tracking_token'] ?? null;
+    }
+
+    // The latest date the order reached each status, as ['printing' => '2026-11-06 10:00:00', ...]
+    public function getStatusDates($orderId)
+    {
+        $rows = $this->fetchAll("SELECT status, MAX(changed_at) AS changed_at FROM order_status_history WHERE order_id = ? GROUP BY status", [$orderId]);
+        return array_column($rows, 'changed_at', 'status');
     }
 
     public function getOrder($orderId)
@@ -113,7 +139,20 @@ class OrderClass extends Database
 
     public function updateStatus($orderId, $status)
     {
-        return $this->execute("UPDATE orders SET order_status = ? WHERE order_id = ?", [$status, $orderId]);
+        try {
+            $this->beginTransaction();
+            // Saving the status an order already has isn't a change, so it adds no history.
+            $changed = $this->executeCount("UPDATE orders SET order_status = ? WHERE order_id = ? AND order_status <> ?", [$status, $orderId, $status]);
+            if ($changed === 1) {
+                $this->execute("INSERT INTO order_status_history (order_id, status) VALUES (?, ?)", [$orderId, $status]);
+            }
+            $this->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->rollBack();
+            error_log("updateStatus failed: " . $e->getMessage());
+            return false;
+        }
     }
 
     // ---------- Payments ----------
@@ -146,11 +185,17 @@ class OrderClass extends Database
                 [$channel, $reference]
             );
             if ($changed === 1) {
-                $this->execute(
+                $moved = $this->executeCount(
                     "UPDATE orders o JOIN payments p ON p.order_id = o.order_id
                      SET o.order_status = 'paid' WHERE p.reference = ? AND o.order_status = 'pending_payment'",
                     [$reference]
                 );
+                if ($moved === 1) {
+                    $this->execute(
+                        "INSERT INTO order_status_history (order_id, status) SELECT order_id, 'paid' FROM payments WHERE reference = ?",
+                        [$reference]
+                    );
+                }
             }
             $this->commit();
             return $changed === 1;
