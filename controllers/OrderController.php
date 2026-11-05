@@ -55,9 +55,14 @@ class OrderController
         return $this->orderModel->getOrdersByCustomer($customerId);
     }
 
-    public function getAllOrders($status = null)
+    public function getAllOrders($status = null, $limit = 0, $offset = 0)
     {
-        return $this->orderModel->getAllOrders(in_array($status, self::STATUSES, true) ? $status : null);
+        return $this->orderModel->getAllOrders(in_array($status, self::STATUSES, true) ? $status : null, $limit, $offset);
+    }
+
+    public function countAllOrders($status = null)
+    {
+        return $this->orderModel->countAllOrders(in_array($status, self::STATUSES, true) ? $status : null);
     }
 
     public function updateStatus($orderId, $status)

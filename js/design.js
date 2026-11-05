@@ -74,7 +74,7 @@
   function baseAngle() { return state.textLayout === 'vertical' ? 90 : 0; }
 
   // ---------- helpers ----------
-  const ghs = (n) => 'GH₵' + (Number.isInteger(n) ? n : n.toFixed(2));
+  const ghs = (n) => 'GH₵' + n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
   const price = () => BASE + (state.caseType === 'Tough' ? TOUGH_EXTRA : 0);
   const hasPhotos = () => state.photos.length > 0;
   const isCollage = () => state.layout in COLLAGES;

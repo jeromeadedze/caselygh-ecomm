@@ -27,7 +27,7 @@ $latestMax = ProductController::LATEST_DESIGNS;
     <?php include __DIR__ . '/admin_nav.php'; ?>
 
     <div class="cart-layout" style="grid-template-columns: minmax(0, 1fr)">
-        <section class="form-card">
+        <section class="form-card" id="case-form">
             <h2 class="section-title-sm"><?php echo $editing ? 'Edit ' . e($editing['product_title']) : 'Add a case'; ?></h2>
             <form action="<?php echo $ROOT_DIR; ?>/actions/save_product_action.php" method="POST" enctype="multipart/form-data">
                 <?php echo csrf_field(); ?>
@@ -69,7 +69,7 @@ $latestMax = ProductController::LATEST_DESIGNS;
 
                 <div class="button-row" style="margin-top:0">
                     <button type="submit" class="btn btn-primary"><?php echo $editing ? 'Save changes' : 'Add case'; ?></button>
-                    <?php if ($editing): ?><a href="products.php" class="btn btn-outline">Cancel</a><?php endif; ?>
+                    <?php if ($editing): ?><a href="products.php#case-<?php echo (int) $editing['product_id']; ?>" class="btn btn-outline">Cancel</a><?php endif; ?>
                 </div>
             </form>
         </section>
@@ -77,7 +77,7 @@ $latestMax = ProductController::LATEST_DESIGNS;
         <section class="form-card">
             <h2 class="section-title-sm">Phone models</h2>
             <p class="muted small" style="margin-bottom: .75rem;">New phone launched? Add it here, then tick it on each case that fits.</p>
-            <form action="<?php echo $ROOT_DIR; ?>/actions/add_model_action.php" method="POST" class="inline-form">
+            <form action="<?php echo $ROOT_DIR; ?>/actions/add_model_action.php" method="POST" data-keep-place class="inline-form">
                 <?php echo csrf_field(); ?>
                 <label class="visually-hidden" for="new-model-brand">Brand</label>
                 <select name="brand_id" id="new-model-brand" class="input">
@@ -94,7 +94,7 @@ $latestMax = ProductController::LATEST_DESIGNS;
         <?php if ($editing && $variants): ?>
             <section class="form-card">
                 <h2 class="section-title-sm">Stock per phone</h2>
-                <form action="<?php echo $ROOT_DIR; ?>/actions/update_stock_action.php" method="POST">
+                <form action="<?php echo $ROOT_DIR; ?>/actions/update_stock_action.php" method="POST" data-keep-place>
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="product_id" value="<?php echo (int) $editing['product_id']; ?>">
                     <div class="table-wrap" tabindex="0" role="region" aria-label="Stock per phone table">
@@ -126,7 +126,7 @@ $latestMax = ProductController::LATEST_DESIGNS;
                     <thead><tr><th scope="col"><span class="visually-hidden">Photo</span></th><th scope="col">Case</th><th scope="col">Price</th><th scope="col">Phones</th><th scope="col">Stock</th><th scope="col">Shown</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
                     <tbody>
                     <?php foreach ($products as $p): ?>
-                        <tr>
+                        <tr id="case-<?php echo (int) $p['product_id']; ?>">
                             <td><?php if ($p['product_image']): ?><img class="admin-thumb" src="<?php echo $ROOT_DIR; ?>/images/products/<?php echo e($p['product_image']); ?>" alt=""><?php endif; ?></td>
                             <td><strong><?php echo e($p['product_title']); ?></strong><br><span class="muted small"><?php echo e($p['collection_name']); ?></span><?php if ($p['featured_at'] && $p['is_active']): ?><br><span class="status status-approved">Latest design</span><?php endif; ?></td>
                             <td><?php echo ghs($p['product_price']); ?></td>
@@ -136,15 +136,15 @@ $latestMax = ProductController::LATEST_DESIGNS;
                             <td>
                                 <div class="row-actions">
                                     <?php if ($p['is_active']): ?>
-                                        <form action="<?php echo $ROOT_DIR; ?>/actions/toggle_latest_action.php" method="POST">
+                                        <form action="<?php echo $ROOT_DIR; ?>/actions/toggle_latest_action.php" method="POST" data-inline="#all-cases">
                                             <?php echo csrf_field(); ?>
                                             <input type="hidden" name="product_id" value="<?php echo (int) $p['product_id']; ?>">
                                             <input type="hidden" name="featured" value="<?php echo $p['featured_at'] ? 0 : 1; ?>">
                                             <button type="submit" class="btn btn-outline btn-xs"><?php echo $p['featured_at'] ? 'Remove from latest' : 'Add to latest'; ?><span class="visually-hidden"> <?php echo e($p['product_title']); ?></span></button>
                                         </form>
                                     <?php endif; ?>
-                                    <a href="products.php?edit=<?php echo (int) $p['product_id']; ?>" class="btn btn-outline btn-xs">Edit<span class="visually-hidden"> <?php echo e($p['product_title']); ?></span></a>
-                                    <form action="<?php echo $ROOT_DIR; ?>/actions/toggle_product_action.php" method="POST">
+                                    <a href="products.php?edit=<?php echo (int) $p['product_id']; ?>#case-form" class="btn btn-outline btn-xs">Edit<span class="visually-hidden"> <?php echo e($p['product_title']); ?></span></a>
+                                    <form action="<?php echo $ROOT_DIR; ?>/actions/toggle_product_action.php" method="POST" data-inline="#all-cases">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="product_id" value="<?php echo (int) $p['product_id']; ?>">
                                         <input type="hidden" name="active" value="<?php echo $p['is_active'] ? 0 : 1; ?>">

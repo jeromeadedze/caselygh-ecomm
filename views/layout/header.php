@@ -42,7 +42,7 @@ $navLinks = [
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Caveat:wght@600;700&family=DM+Sans:wght@400;500;700&family=Great+Vibes&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo $ROOT_DIR; ?>/css/style.css?v=<?php echo filemtime(__DIR__ . '/../../css/style.css'); ?>">
 </head>
-<body>
+<body class="<?php echo isset($admin_page) ? 'admin-ui' : 'store-ui'; ?>">
     <a href="#main" class="skip-link">Skip to content</a>
 
     <header class="site-header">

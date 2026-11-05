@@ -66,6 +66,11 @@ class ProductController
         return $this->productModel->getProducts($filters);
     }
 
+    public function countProducts(array $filters = [])
+    {
+        return $this->productModel->countProducts($filters);
+    }
+
     public function getFeaturedProducts($limit = self::LATEST_DESIGNS)
     {
         return $this->productModel->getLatestDesigns($limit);

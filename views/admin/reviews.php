@@ -36,7 +36,7 @@ $reviews = (new ReviewController())->getByStatus($status);
                     <p class="review-stars" role="img" aria-label="Rated <?php echo (int) $r['rating']; ?> out of 5"><?php echo str_repeat('★', (int) $r['rating']) . str_repeat('☆', 5 - (int) $r['rating']); ?></p>
                     <p><?php echo nl2br(e($r['review_text'])); ?></p>
                     <p class="muted small"><?php echo e($r['customer_name']); ?> · <?php echo e($r['invoice_no']); ?> · <?php echo date('j M Y', strtotime($r['created_at'])); ?></p>
-                    <form action="<?php echo $ROOT_DIR; ?>/actions/moderate_review_action.php" method="POST" class="inline-form">
+                    <form action="<?php echo $ROOT_DIR; ?>/actions/moderate_review_action.php" method="POST" data-keep-place class="inline-form">
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="review_id" value="<?php echo (int) $r['review_id']; ?>">
                         <?php if ($status !== 'approved'): ?>

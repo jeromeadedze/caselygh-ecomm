@@ -45,7 +45,7 @@ $problems = $cartCtrl->findStockProblems($items);
                             <?php if ($item['is_custom']): ?>
                                 <span class="tag tag-butter">Custom · checked before printing</span>
                             <?php endif; ?>
-                            <form action="<?php echo $ROOT_DIR; ?>/actions/update_cart_action.php" method="POST" class="qty-stepper qty-sm">
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/update_cart_action.php" method="POST" data-keep-place class="qty-stepper qty-sm">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="cart_id" value="<?php echo (int) $item['cart_id']; ?>">
                                 <button type="submit" name="qty" value="<?php echo (int) $item['qty'] - 1; ?>" aria-label="Decrease quantity" <?php echo $item['qty'] <= 1 ? 'disabled' : ''; ?>>&minus;</button>
@@ -55,7 +55,7 @@ $problems = $cartCtrl->findStockProblems($items);
                         </div>
                         <div class="cart-side">
                             <p class="strong"><?php echo ghs($item['line_total']); ?></p>
-                            <form action="<?php echo $ROOT_DIR; ?>/actions/remove_from_cart_action.php" method="POST"<?php if ($item['is_custom']): ?> data-confirm-title="Remove your custom case?" data-confirm-body="You'll need to design it again unless you saved a draft." data-confirm-yes="Remove case" data-confirm-no="Keep case"<?php endif; ?>>
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/remove_from_cart_action.php" method="POST" data-keep-place<?php if ($item['is_custom']): ?> data-confirm-title="Remove your custom case?" data-confirm-body="You'll need to design it again unless you saved a draft." data-confirm-yes="Remove case" data-confirm-no="Keep case"<?php endif; ?>>
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="cart_id" value="<?php echo (int) $item['cart_id']; ?>">
                                 <button type="submit" class="icon-btn" aria-label="Remove <?php echo e($item['item_name']); ?>">

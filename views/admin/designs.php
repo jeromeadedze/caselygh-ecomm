@@ -47,7 +47,7 @@ $designs = (new CustomDesignController())->getDesignsForReview($status);
                         <?php endif; ?>
                     </div>
                     <?php if ($status === 'pending'): ?>
-                        <form action="<?php echo $ROOT_DIR; ?>/actions/review_design_action.php" method="POST" class="stack">
+                        <form action="<?php echo $ROOT_DIR; ?>/actions/review_design_action.php" method="POST" data-keep-place class="stack">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="design_id" value="<?php echo (int) $d['design_id']; ?>">
                             <label class="field" style="margin:0">

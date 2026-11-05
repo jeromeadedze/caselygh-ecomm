@@ -16,7 +16,11 @@ $filters = [
     'q' => trim($_GET['q'] ?? ''),
     'sort' => in_array($_GET['sort'] ?? '', ['newest', 'low', 'high'], true) ? $_GET['sort'] : 'newest',
 ];
-$products = $productCtrl->getProducts($filters);
+$perPage = 24;
+$totalProducts = $productCtrl->countProducts($filters);
+$pages = max(1, (int) ceil($totalProducts / $perPage));
+$page = min($pages, max(1, (int) ($_GET['page'] ?? 1)));
+$products = $productCtrl->getProducts($filters + ['limit' => $perPage, 'offset' => ($page - 1) * $perPage]);
 $chosenModel = $filters['model_id'] ? $productCtrl->getModelById($filters['model_id']) : null;
 
 // Build a shop URL that keeps the other filters but changes one.
@@ -78,6 +82,10 @@ function shop_url($ROOT_DIR, array $filters, array $change)
                 <?php include __DIR__ . '/layout/product_card.php'; ?>
             <?php endforeach; ?>
         </div>
+        <?php
+        $pageUrl = fn($n) => shop_url($ROOT_DIR, $filters, ['page' => $n > 1 ? $n : '']);
+        include __DIR__ . '/layout/pagination.php';
+        ?>
     <?php else: ?>
         <div class="empty-state">
             <p class="script script-lg">Nothing here yet</p>

@@ -12,4 +12,4 @@ verify_csrf();
 $active = !empty($_POST['active']);
 (new ProductController())->setActive((int) ($_POST['product_id'] ?? 0), $active);
 $_SESSION['success'] = $active ? "Case is now shown in the shop." : "Case hidden from the shop.";
-redirect('../views/admin/products.php');
+redirect('../views/admin/products.php#case-' . (int) ($_POST['product_id'] ?? 0));

@@ -16,4 +16,4 @@ if ($result['success']) {
 } else {
     $_SESSION['error'] = $result['error'];
 }
-redirect('../views/admin/products.php#all-cases');
+redirect('../views/admin/products.php#case-' . (int) ($_POST['product_id'] ?? 0));

@@ -55,6 +55,37 @@ class ProductClass extends Database
      */
     public function getProducts(array $filters = [])
     {
+        [$where, $params] = $this->productFilters($filters);
+
+        $order = "p.created_at DESC, p.product_id DESC";
+        if (($filters['sort'] ?? '') === 'low') {
+            $order = "p.product_price ASC";
+        } elseif (($filters['sort'] ?? '') === 'high') {
+            $order = "p.product_price DESC";
+        }
+
+        $sql = "SELECT p.*, c.collection_name, c.collection_slug
+                FROM products p JOIN collections c ON c.collection_id = p.collection_id
+                WHERE " . implode(' AND ', $where) . " ORDER BY $order";
+
+        if (!empty($filters['limit'])) {
+            $sql .= " LIMIT " . (int) $filters['limit'] . " OFFSET " . max(0, (int) ($filters['offset'] ?? 0));
+        }
+        return $this->fetchAll($sql, $params);
+    }
+
+    public function countProducts(array $filters = [])
+    {
+        [$where, $params] = $this->productFilters($filters);
+        $sql = "SELECT COUNT(*) AS total
+                FROM products p JOIN collections c ON c.collection_id = p.collection_id
+                WHERE " . implode(' AND ', $where);
+        $row = $this->fetchOne($sql, $params);
+        return (int) ($row['total'] ?? 0);
+    }
+
+    private function productFilters(array $filters)
+    {
         $where = ["p.is_active = 1"];
         $params = [];
 
@@ -75,22 +106,7 @@ class ProductClass extends Database
             $like = '%' . $filters['q'] . '%';
             array_push($params, $like, $like, $like);
         }
-
-        $order = "p.created_at DESC, p.product_id DESC";
-        if (($filters['sort'] ?? '') === 'low') {
-            $order = "p.product_price ASC";
-        } elseif (($filters['sort'] ?? '') === 'high') {
-            $order = "p.product_price DESC";
-        }
-
-        $sql = "SELECT p.*, c.collection_name, c.collection_slug
-                FROM products p JOIN collections c ON c.collection_id = p.collection_id
-                WHERE " . implode(' AND ', $where) . " ORDER BY $order";
-
-        if (!empty($filters['limit'])) {
-            $sql .= " LIMIT " . (int) $filters['limit'];
-        }
-        return $this->fetchAll($sql, $params);
+        return [$where, $params];
     }
 
     public function getProductBySlug($slug)

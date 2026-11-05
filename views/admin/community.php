@@ -41,7 +41,7 @@ $posts = (new CommunityController())->getPostsByStatus($status);
                         <?php if ($p['reward_code']): ?><p class="small">Discount code: <code class="code-chip"><?php echo e($p['reward_code']); ?></code></p><?php endif; ?>
                     </div>
                     <?php if ($status !== 'approved'): ?>
-                        <form action="<?php echo $ROOT_DIR; ?>/actions/moderate_post_action.php" method="POST" class="inline-form">
+                        <form action="<?php echo $ROOT_DIR; ?>/actions/moderate_post_action.php" method="POST" data-keep-place class="inline-form">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="post_id" value="<?php echo (int) $p['post_id']; ?>">
                             <button type="submit" name="decision" value="approved" class="btn btn-dark btn-sm">Approve</button>
@@ -50,7 +50,7 @@ $posts = (new CommunityController())->getPostsByStatus($status);
                             <?php endif; ?>
                         </form>
                     <?php else: ?>
-                        <form action="<?php echo $ROOT_DIR; ?>/actions/moderate_post_action.php" method="POST">
+                        <form action="<?php echo $ROOT_DIR; ?>/actions/moderate_post_action.php" method="POST" data-keep-place>
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="post_id" value="<?php echo (int) $p['post_id']; ?>">
                             <button type="submit" name="decision" value="rejected" class="btn btn-outline btn-sm">Remove from wall</button>

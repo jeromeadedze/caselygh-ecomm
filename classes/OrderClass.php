@@ -87,7 +87,14 @@ class OrderClass extends Database
         return $this->fetchAll($sql, [$customerId]);
     }
 
-    public function getAllOrders($status = null)
+    public function countAllOrders($status = null)
+    {
+        $sql = "SELECT COUNT(*) AS total FROM orders" . ($status ? " WHERE order_status = ?" : "");
+        $row = $this->fetchOne($sql, $status ? [$status] : []);
+        return (int) ($row['total'] ?? 0);
+    }
+
+    public function getAllOrders($status = null, $limit = 0, $offset = 0)
     {
         $sql = "SELECT o.*, c.customer_name, c.customer_email,
                        (SELECT COALESCE(SUM(qty), 0) FROM orderdetails WHERE order_id = o.order_id) AS item_count
@@ -97,7 +104,11 @@ class OrderClass extends Database
             $sql .= " WHERE o.order_status = ?";
             $params[] = $status;
         }
-        return $this->fetchAll($sql . " ORDER BY o.order_date DESC", $params);
+        $sql .= " ORDER BY o.order_date DESC, o.order_id DESC";
+        if ($limit) {
+            $sql .= " LIMIT " . (int) $limit . " OFFSET " . max(0, (int) $offset);
+        }
+        return $this->fetchAll($sql, $params);
     }
 
     public function updateStatus($orderId, $status)

@@ -46,6 +46,10 @@ class ReviewController
     public static function displayName($fullName)
     {
         $parts = preg_split('/\s+/', trim((string) $fullName));
+        // "III" or "Jr" is not a surname.
+        while (count($parts) > 1 && preg_match('/^(jr|sr|ii|iii|iv|phd)\.?$/i', end($parts))) {
+            array_pop($parts);
+        }
         $first = $parts[0] ?? 'Casely customer';
         $last = count($parts) > 1 ? ' ' . mb_strtoupper(mb_substr(end($parts), 0, 1)) . '.' : '';
         return $first . $last;

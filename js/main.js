@@ -6,7 +6,12 @@
   });
 
   // Hide success toasts after a few seconds. Warnings and errors stay until dismissed.
-  const dismiss = (t) => (window.caselyDismissToast ? window.caselyDismissToast(t) : t.remove());
+  window.caselyDismissToast = window.caselyDismissToast || ((t) => {
+    if (!t || t.classList.contains('is-leaving')) return;
+    t.classList.add('is-leaving');
+    setTimeout(() => t.remove(), 200);
+  });
+  const dismiss = (t) => window.caselyDismissToast(t);
   document.querySelectorAll('.toast-success').forEach((toast) => {
     setTimeout(() => dismiss(toast), 6000);
   });
@@ -44,6 +49,77 @@
       });
     });
   });
+
+  // A photo that no longer exists shows the same box as a case with no photo.
+  const swapMissingImage = (img) => {
+    if (img.closest('.hero-ring')) return;
+    const box = document.createElement('span');
+    box.className = ('image-placeholder ' + img.className).trim();
+    box.textContent = 'No photo yet';
+    img.replaceWith(box);
+  };
+  document.addEventListener('error', (e) => {
+    if (e.target.tagName === 'IMG') swapMissingImage(e.target);
+  }, true);
+  document.querySelectorAll('img').forEach((img) => {
+    if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) swapMissingImage(img);
+  });
+
+  // Quick admin actions update the list where it is, with no page reload.
+  // If anything goes wrong, the form simply submits the normal way.
+  document.addEventListener('submit', async (e) => {
+    const f = e.target;
+    if (!f.matches('form[data-inline]') || !window.fetch) return;
+    e.preventDefault();
+    if (f.dataset.busy === '1') return;
+    f.dataset.busy = '1';
+    const btn = e.submitter || f.querySelector('[type="submit"]');
+    if (btn) btn.setAttribute('aria-busy', 'true');
+    const row = f.closest('[id]');
+    const action = f.getAttribute('action');
+    try {
+      const res = await fetch(f.action, { method: 'POST', body: new FormData(f), credentials: 'same-origin' });
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      const fresh = doc.querySelector(f.dataset.inline);
+      const current = document.querySelector(f.dataset.inline);
+      if (!res.ok || !fresh || !current) {
+        window.location.assign(res.url || window.location.href); // e.g. logged out: show that page
+        return;
+      }
+      current.replaceWith(fresh);
+      const newRow = row && row.id ? document.getElementById(row.id) : null;
+      const focusTo = newRow && (newRow.querySelector('form[action="' + action + '"] button') || newRow.querySelector('button, a'));
+      if (focusTo) focusTo.focus({ preventScroll: true });
+      const stack = doc.querySelector('.toast-stack');
+      if (stack) {
+        document.querySelectorAll('.toast-stack').forEach((old) => old.remove());
+        document.body.append(stack);
+        stack.querySelectorAll('.toast-success').forEach((toast) => setTimeout(() => dismiss(toast), 6000));
+      }
+    } catch (err) {
+      delete f.dataset.busy;
+      f.submit();
+    }
+  });
+
+  // Actions that reload the same page bring you back to where you were.
+  const PLACE_KEY = 'casely-place';
+  document.querySelectorAll('form[data-keep-place]').forEach((f) => {
+    f.addEventListener('submit', () => {
+      try {
+        sessionStorage.setItem(PLACE_KEY, JSON.stringify({ path: location.pathname, y: window.scrollY, at: Date.now() }));
+      } catch (e) { /* the page's own anchor still applies */ }
+    });
+  });
+  try {
+    const place = JSON.parse(sessionStorage.getItem(PLACE_KEY) || 'null');
+    sessionStorage.removeItem(PLACE_KEY);
+    if (place && place.path === location.pathname && Date.now() - place.at < 60000) {
+      const goBack = () => window.scrollTo({ top: place.y, behavior: 'instant' });
+      goBack();
+      window.addEventListener('load', goBack, { once: true }); // again once images have their height
+    }
+  } catch (e) { /* stay at the top */ }
 
   // Actions that can't be undone ask first, naming what will be lost. Without
   // JavaScript the form simply submits.
@@ -155,7 +231,7 @@
   const totalEl = form.querySelector('[data-total]');
   const stockEl = form.querySelector('[data-stock]');
   const addBtn = form.querySelector('[data-add-btn]');
-  const ghs = (n) => 'GH₵' + (Number.isInteger(n) ? n : n.toFixed(2));
+  const ghs = (n) => 'GH₵' + n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
 
   // ---------- "On your phone" preview (js/case-mockup.js) ----------
   const media = document.getElementById('product-media');

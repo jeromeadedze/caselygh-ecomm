@@ -10,7 +10,10 @@ require_once __DIR__ . '/../../controllers/OrderController.php';
 
 $orderCtrl = new OrderController();
 $status = $_GET['status'] ?? '';
-$orders = $orderCtrl->getAllOrders($status ?: null);
+$perPage = 25;
+$pages = max(1, (int) ceil($orderCtrl->countAllOrders($status ?: null) / $perPage));
+$page = min($pages, max(1, (int) ($_GET['page'] ?? 1)));
+$orders = $orderCtrl->getAllOrders($status ?: null, $perPage, ($page - 1) * $perPage);
 ?>
 
 <div class="container page">
@@ -60,7 +63,7 @@ $orders = $orderCtrl->getAllOrders($status ?: null);
                         </td>
                         <td><?php echo ghs($o['total']); ?></td>
                         <td>
-                            <form action="<?php echo $ROOT_DIR; ?>/actions/update_order_status_action.php" method="POST" class="inline-form">
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/update_order_status_action.php" method="POST" data-keep-place class="inline-form">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="order_id" value="<?php echo (int) $o['order_id']; ?>">
                                 <label class="visually-hidden" for="status-<?php echo (int) $o['order_id']; ?>">Status for <?php echo e($o['invoice_no']); ?></label>
@@ -77,6 +80,10 @@ $orders = $orderCtrl->getAllOrders($status ?: null);
                 </tbody>
             </table>
         </div>
+        <?php
+        $pageUrl = fn($n) => 'orders.php?' . http_build_query(array_filter(['status' => $status, 'page' => $n > 1 ? $n : '']));
+        include __DIR__ . '/../layout/pagination.php';
+        ?>
     <?php endif; ?>
 </div>
 

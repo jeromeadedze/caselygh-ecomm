@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../controllers/CustomerController.php';
 $orderCtrl = new OrderController();
 $summary = $orderCtrl->getSalesSummary();
 $bestSellers = $orderCtrl->getBestSellers(5);
-$recent = array_slice($orderCtrl->getAllOrders(), 0, 6);
+$recent = $orderCtrl->getAllOrders(null, 6);
 $productCtrl = new ProductController();
 $lowStock = $productCtrl->getLowStockVariants(3);
 $lowStockTotal = $productCtrl->countLowStockVariants(3);

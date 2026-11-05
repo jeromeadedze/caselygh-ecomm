@@ -82,7 +82,7 @@ $drafts = (new DraftController())->getDrafts(get_user_id());
                         </div>
                         <div class="draft-actions">
                             <a href="<?php echo $ROOT_DIR; ?>/views/design.php?draft=<?php echo (int) $d['draft_id']; ?>" class="btn btn-dark btn-xs">Continue</a>
-                            <form action="<?php echo $ROOT_DIR; ?>/actions/delete_draft_action.php" method="POST"
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/delete_draft_action.php" method="POST" data-keep-place
                                   data-confirm-title="Delete the draft “<?php echo e($d['draft_name']); ?>”?" data-confirm-body="This design and its photos will be deleted. This can't be undone." data-confirm-yes="Delete draft" data-confirm-no="Keep draft">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="draft_id" value="<?php echo (int) $d['draft_id']; ?>">
