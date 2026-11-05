@@ -73,7 +73,7 @@
   function baseAngle() { return state.textLayout === 'vertical' ? 90 : 0; }
 
   // ---------- helpers ----------
-  const ghs = (n) => 'GH₵' + n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
+  const ghs = (n) => 'GHS\u00a0' + n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
   const price = () => BASE + (state.caseType === 'Tough' ? TOUGH_EXTRA : 0);
   const hasPhotos = () => state.photos.length > 0;
   const isCollage = () => state.layout in COLLAGES;
@@ -125,7 +125,7 @@
       body.hidden = !open;
       section.classList.toggle('is-open', open);
       // Bring the opened step into view inside the scrolling steps list.
-      if (open && state.ready) head.scrollIntoView({ block: 'nearest' });
+      if (open && state.ready) head.scrollIntoView({ block: 'nearest', behavior: 'instant' });
       if (open && state.ready && idx === STEP.text && hasText()) state.selected = 'text';
       if (open && state.ready && (idx === STEP.photo || idx === STEP.layout) && hasPhotos() && !isCollage()) state.selected = 'photo';
     });

@@ -11,7 +11,7 @@ define("APP_URL", "http://localhost/casely");
 define("PAYSTACK_SECRET_KEY", "sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 define("PAYSTACK_PUBLIC_KEY", "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
-// Pricing (GH₵). Confirm these with the owner.
+// Pricing (GHS). Confirm these with the owner.
 define("TOUGH_EXTRA", 25);          // extra cost of a Tough case over Standard
 define("CUSTOM_CASE_PRICE", 150);   // custom case, Standard
 define("DELIVERY_FEE", 30);         // flat delivery fee

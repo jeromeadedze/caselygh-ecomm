@@ -159,12 +159,13 @@ function e($value)
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-// Format a price in Ghana cedis, e.g. GH₵110 or GH₵92.50
+// Format a price in Ghana cedis, e.g. GHS 110 or GHS 92.50. The fonts have no cedi sign,
+// and the space doesn't break, so the amount stays with its currency.
 function ghs($amount)
 {
     $amount = (float) $amount;
     $decimals = (floor($amount) == $amount) ? 0 : 2;
-    return 'GH₵' . number_format($amount, $decimals);
+    return "GHS\u{00A0}" . number_format($amount, $decimals);
 }
 
 // Relative path from the current page back to the app root.

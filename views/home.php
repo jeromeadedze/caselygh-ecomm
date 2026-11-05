@@ -213,6 +213,7 @@ require __DIR__ . '/layout/ig_posts.php';
 
 <section class="container section" data-reveal>
     <div class="final-cta">
+        <?php include __DIR__ . '/layout/logo_mark.php'; ?>
         <h2 class="section-title">Your case is one design away</h2>
         <p>Our team checks every design before printing. If your case arrives damaged or wrong, tell us within 48 hours and we will review it for an exchange or refund.</p>
         <div class="hero-actions">

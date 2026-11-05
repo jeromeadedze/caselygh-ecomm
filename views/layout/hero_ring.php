@@ -90,4 +90,7 @@ SVG;
             </div>
         <?php endforeach; ?>
     </div>
+    <div class="hero-ring-logo" aria-hidden="true"><?php include __DIR__ . '/logo_mark.php'; ?></div>
+    <!-- Larger screens: the Casely C wraps around the headline, between it and the cases. -->
+    <svg class="hero-ring-c" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><path d="M181.77 45.26A98.4 98.4 0 1 0 181.77 154.74M176.95 48.49A92.6 92.6 0 1 0 176.95 151.51M172.13 51.71A86.8 86.8 0 1 0 172.13 148.29M167.31 54.94A81.0 81.0 0 1 0 167.31 145.06" fill="none" stroke="currentColor" stroke-width="3.2"/></svg>
 </div>

@@ -312,7 +312,7 @@
   const totalEl = form.querySelector('[data-total]');
   const stockEl = form.querySelector('[data-stock]');
   const addBtn = form.querySelector('[data-add-btn]');
-  const ghs = (n) => 'GH₵' + n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
+  const ghs = (n) => 'GHS\u00a0' + n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 });
 
   // ---------- "On your phone" preview (js/case-mockup.js) ----------
   const media = document.getElementById('product-media');
@@ -360,7 +360,7 @@
   }
   if (bar && 'IntersectionObserver' in window) {
     bar.querySelector('[data-bar-choose]').addEventListener('click', () => {
-      form.scrollIntoView({ block: 'start' });
+      form.scrollIntoView({ block: 'start', behavior: 'instant' });
       brandSelect.focus({ preventScroll: true });
     });
     new IntersectionObserver(([entry]) => {

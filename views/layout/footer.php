@@ -4,7 +4,7 @@
     <footer class="site-footer">
         <div class="container footer-grid">
             <div>
-                <p class="footer-logo">Casely</p>
+                <p class="footer-logo"><?php include __DIR__ . '/logo_mark.php'; ?>Casely</p>
                 <p class="script footer-tagline">Your case. Your way.</p>
             </div>
             <div class="footer-links">

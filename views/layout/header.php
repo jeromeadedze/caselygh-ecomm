@@ -70,7 +70,7 @@ $navLinks = [
 
     <header class="site-header">
         <div class="container header-inner">
-            <a href="<?php echo $ROOT_DIR; ?>/index.php" class="logo">Casely</a>
+            <a href="<?php echo $ROOT_DIR; ?>/index.php" class="logo"><?php include __DIR__ . '/logo_mark.php'; ?>Casely</a>
 
             <nav class="main-nav" aria-label="Main">
                 <?php foreach ($navLinks as $key => [$label, $href]): ?>

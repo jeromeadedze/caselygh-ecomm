@@ -7,30 +7,30 @@
 :root {
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1); /* the site's one decelerating curve */
   --radius: 1.25rem;
-  --background: oklch(0.995 0.003 350);
-  --foreground: oklch(0.17 0.01 330);
+  --background: oklch(0.995 0.001 25);
+  --foreground: oklch(0.17 0.005 25);
   --card: oklch(1 0 0);
-  --primary: oklch(0.65 0.19 355);          /* Casely pink */
-  --primary-strong: oklch(0.54 0.2 355);    /* pink for text + buttons: 5.7:1 with white, 4.8:1 on --secondary */
+  --primary: #ff0405;                       /* Casely red, exactly as in the logo: the mark, focus rings, red on black */
+  --primary-strong: oklch(0.54 0.22 29);    /* red for text and buttons, darker so white text stays readable */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.035 350);
-  --secondary-foreground: oklch(0.3 0.08 340);
-  --muted: oklch(0.965 0.01 340);
-  --muted-foreground: oklch(0.47 0.02 330);
+  --secondary: oklch(0.955 0.02 25);
+  --secondary-foreground: oklch(0.3 0.09 25);
+  --muted: oklch(0.965 0.004 25);
+  --muted-foreground: oklch(0.47 0.012 25);
   --accent: oklch(0.92 0.06 95);
-  --destructive: oklch(0.55 0.22 27);
-  --destructive-text: oklch(0.5 0.2 27);    /* error text on tinted backgrounds (5.1:1) */
-  --border: oklch(0.92 0.015 340);
-  --input: oklch(0.64 0.02 340);            /* form field edges need 3:1 against the field (3.4:1) */
-  --ring: oklch(0.65 0.19 355);
-  --plum: oklch(0.32 0.1 345);
+  --destructive: oklch(0.4 0.14 25);
+  --destructive-text: oklch(0.45 0.17 25);    /* error text on tinted backgrounds (5.1:1) */
+  --border: oklch(0.92 0.006 25);
+  --input: oklch(0.62 0.01 25);            /* form field edges need 3:1 against the field (3.4:1) */
+  --ring: var(--primary);
+  --plum: oklch(0.28 0.07 25);
   --lilac: oklch(0.78 0.08 310);
   --butter: oklch(0.93 0.11 100);
   --mint: oklch(0.88 0.06 155);
   --sky: oklch(0.85 0.05 255);
-  --pink-soft: oklch(0.9 0.06 355);
-  --ink: oklch(0.17 0.01 330);
-  --ink-foreground: oklch(0.98 0.005 350);
+  --pink-soft: oklch(0.93 0.035 25);
+  --ink: oklch(0.17 0.005 25);
+  --ink-foreground: oklch(0.98 0.002 25);
   --success: oklch(0.55 0.13 155);
   --warning: oklch(0.7 0.15 70);
 
@@ -152,7 +152,8 @@ main:focus { outline: none; }
   backdrop-filter: blur(10px);
 }
 .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 1rem; padding-bottom: 1rem; }
-.logo { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; color: var(--primary-strong); }
+.logo { display: inline-flex; align-items: center; gap: .4rem; font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; letter-spacing: -0.03em; color: var(--foreground); }
+.logo-mark { flex: none; display: block; width: 1.75rem; height: 1.75rem; color: var(--primary); }
 .main-nav { display: none; gap: 2rem; font-size: .9rem; font-weight: 700; }
 .main-nav a.is-active, .header-link.is-active { color: var(--primary-strong); }
 .header-actions { display: flex; align-items: center; gap: .75rem; }
@@ -239,6 +240,7 @@ main:focus { outline: none; }
 
 /* Motion is opt-in: only for people who haven't asked for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; } /* links to a section on the same page glide there */
   .hero-ring-spin { animation: hero-spin 90s linear infinite; }
   .hero-case { animation: hero-case-in .7s var(--ease-settle) both; animation-delay: calc(var(--i) * 45ms); }
 }
@@ -252,20 +254,22 @@ main:focus { outline: none; }
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
 }
 .hero-script { font-size: 2.25rem; line-height: 1; }
-.hero-copy h1 { font-size: 2.25rem; line-height: 1.1; font-weight: 900; margin-top: .25rem; max-width: 680px; }
+.hero-copy h1 { font-size: min(2.25rem, 11.5cqi); line-height: 1.1; font-weight: 900; margin-top: .25rem; max-width: 680px; }
 .hero-copy .hero-sub { margin-top: .75rem; font-size: 1rem; line-height: 1.5; max-width: 24rem; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem 1rem; margin-top: 1rem; }
 .hero-copy .hero-proof { margin-top: .75rem; font-size: .875rem; color: var(--muted-foreground); }
 @media (hover: hover) { .hero-proof a:hover { color: var(--foreground); text-decoration: underline; } }
-/* The text only fits inside the ring on wide screens; below that it sits under it. */
-@media (max-width: 899px) {
+/* The text only fits inside the ring on wide screens; below that it sits under it.
+   These breakpoints are in em (56.25em = 900px) so a larger browser font size moves
+   the text below the ring too, instead of running it across the C. */
+@media (max-width: 56.1875em) {
   .hero-media { max-width: 30rem; }
   .hero-ring { --r: 34cqi; --case-w: 15cqi; }
   .hero-copy { position: static; margin-top: .5rem; }
 }
 /* Tablets: a smaller ring keeps the call to action in the first screen. */
-@media (min-width: 640px) and (max-width: 899px) { .hero-media { max-width: 26rem; } }
-@media (min-width: 900px) {
+@media (min-width: 640px) and (max-width: 56.1875em) { .hero-media { max-width: 26rem; } }
+@media (min-width: 56.25em) {
   .hero-script { font-size: min(2.25rem, 4cqi); }
   .hero-copy h1 { font-size: min(3rem, 5.2cqi); }
   .hero-copy .hero-sub { font-size: 1.125rem; line-height: 1.55; }
@@ -330,6 +334,9 @@ main:focus { outline: none; }
   box-shadow: 0 12px 28px -12px oklch(0 0 0 / 0.18), 0 2px 6px -2px oklch(0 0 0 / 0.06);
 }
 body:has(.buy-bar:not([hidden])) .studio-tab { bottom: 5.5rem; }
+/* Leave room under the footer and when tabbing, so the tab never covers a link for good. */
+html:has(.studio-tab) { scroll-padding-bottom: 5.5rem; }
+body:has(.studio-tab) .site-footer { padding-bottom: 5.5rem; }
 .studio-tab-open { display: flex; align-items: center; gap: .625rem; min-width: 0; min-height: 44px; padding: .5rem .25rem .5rem .75rem; color: var(--foreground); }
 .studio-tab-open > svg { flex: none; color: var(--primary-strong); }
 .studio-tab-open strong { display: block; font-size: .875rem; font-weight: 500; line-height: 1.3; }
@@ -373,7 +380,7 @@ body:has(.buy-bar:not([hidden])) .studio-tab { bottom: 5.5rem; }
     .hero-media { animation: hero-slide-away linear both; animation-timeline: scroll(root); animation-range: 0 85vh; }
   }
 }
-@keyframes hero-slide-away { to { translate: 0 -5rem; opacity: .35; } }
+@keyframes hero-slide-away { to { translate: 0 -5rem; } }
 
 .phone-finder {
   display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem;
@@ -390,11 +397,11 @@ body:has(.buy-bar:not([hidden])) .studio-tab { bottom: 5.5rem; }
   transition: transform .2s ease;
 }
 @media (hover: hover) { .collection-tile:hover { transform: translateY(-4px); } }
-.tone-pink { background: var(--pink-soft); }
-.tone-lilac { background: var(--lilac); }
-.tone-sky { background: var(--sky); }
-.tone-butter { background: var(--butter); }
-.tone-mint { background: var(--mint); }
+.tone-pink { background: var(--secondary); }
+.tone-lilac { background: var(--muted); }
+.tone-sky { background: var(--ink); color: var(--ink-foreground); }
+.tone-butter { background: var(--primary-strong); color: var(--primary-foreground); }
+.tone-mint { background: var(--pink-soft); }
 @media (min-width: 768px) { .collection-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* Home: Instagram community strip */
@@ -726,7 +733,10 @@ select.input {
 /* ---------- Footer ---------- */
 .site-footer { margin-top: 6rem; background: var(--ink); color: var(--ink-foreground); }
 .footer-grid { display: grid; gap: 2rem; padding-top: 3.5rem; padding-bottom: 3.5rem; }
-.footer-logo { font-family: var(--font-display); font-size: 1.875rem; font-weight: 900; color: var(--primary); }
+.footer-logo { display: flex; align-items: center; gap: .5rem; font-family: var(--font-display); font-size: 1.875rem; font-weight: 900; color: var(--ink-foreground); }
+.footer-logo .logo-mark { width: 2.25rem; height: 2.25rem; }
+.summary-card .text-link { color: var(--primary); }
+.final-cta .logo-mark { width: 3.5rem; height: 3.5rem; }
 .footer-tagline { color: var(--ink-foreground); font-size: 1.5rem; margin-top: .5rem; }
 .footer-links { display: grid; gap: .5rem; font-size: .9rem; align-content: start; }
 .footer-ig { display: inline-flex; align-items: center; gap: .5rem; }
@@ -844,7 +854,7 @@ select.input {
   .studio-new-label { display: inline; }
 }
 .studio-summary .btn { flex: none; min-height: 44px; }
-.studio-summary :focus-visible { outline-color: var(--primary-foreground); } /* white on pink: the pink ring vanished here */
+.studio-summary :focus-visible { outline-color: var(--primary-foreground); } /* white on red: a red ring would vanish here */
 .studio-summary-actions { display: flex; gap: .5rem; flex: none; }
 @media (max-width: 479px) { .btn-extra { display: none; } .studio-summary-actions .btn { padding-inline: .9rem; } }
 .btn-ghost-light { background: transparent; color: var(--primary-foreground); border-color: color-mix(in oklab, var(--primary-foreground) 70%, transparent); }
@@ -1108,7 +1118,7 @@ details.order-details ul { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .
 
 /* ==========================================================
    Admin area: calm, compact components in the shadcn/ui style.
-   Same Casely fonts and pink. The storefront is unaffected.
+   Same Casely fonts and red.
    ========================================================== */
 .admin-ui .page { --admin-radius: .625rem; }
 .admin-ui .page .display-md { font-size: 1.75rem; font-weight: 800; margin-bottom: 1rem; }
@@ -1167,7 +1177,7 @@ details.order-details ul { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .
 
 /* ==========================================================
    Storefront: the same compact shadcn/ui style as admin.
-   Same Casely fonts, pink and case artwork.
+   Same Casely fonts, red and case artwork.
    ========================================================== */
 /* Header */
 :is(.store-ui, .admin-ui) .main-nav, :is(.store-ui, .admin-ui) .mobile-nav { font-size: .875rem; font-weight: 500; }
@@ -1237,3 +1247,22 @@ details.order-details ul { margin: .5rem 0 0; padding-left: 1.1rem; font-size: .
 .store-ui .step-arrow { height: 2.75rem; border-width: 1px; border-color: var(--input); border-radius: .5rem; }
 .store-ui .pick { border-width: 1px; border-radius: .5rem; font-weight: 500; }
 .store-ui .pick.is-on { box-shadow: inset 0 0 0 1px var(--ink); }
+
+/* The Casely mark sits inside the ring of cases and doesn't spin. On phones and tablets
+   it fills the circle, with the copy below. On larger screens the copy fills the circle,
+   so the C wraps around it, leaving a small gap before the cases. */
+.hero-ring-logo { position: absolute; left: 50%; top: 50%; width: 34cqi; height: 34cqi; translate: -50% -50%; color: var(--primary); pointer-events: none; }
+.hero-ring-logo .logo-mark { width: 100%; height: 100%; }
+.hero-ring-c { display: none; }
+@media (min-width: 56.25em) {
+  .hero-ring { --r: 40cqi; --case-w: 9.5cqi; }
+  .hero-ring-logo { display: none; }
+  .hero-ring-c { display: block; position: absolute; left: 50%; top: 50%; width: 59cqi; height: 59cqi; translate: -50% -50%; color: var(--primary); pointer-events: none; }
+}
+@media (max-width: 379px) {
+  .logo { gap: .25rem; font-size: 1.25rem; }
+  .logo .logo-mark { width: 1.375rem; height: 1.375rem; }
+  .header-inner { gap: .5rem; }
+  .header-actions { gap: .375rem; }
+  .store-ui .cart-pill { padding-inline: .625rem; }
+}

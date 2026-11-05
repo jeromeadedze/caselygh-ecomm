@@ -43,7 +43,7 @@ $latestMax = ProductController::LATEST_DESIGNS;
                                 <option value="<?php echo (int) $c['collection_id']; ?>" <?php echo ($editing['collection_id'] ?? 0) == $c['collection_id'] ? 'selected' : ''; ?>><?php echo e($c['collection_name']); ?></option>
                             <?php endforeach; ?>
                         </select></label>
-                    <label class="field"><span>Standard price (GH₵) — Tough adds <?php echo ghs(TOUGH_EXTRA); ?></span>
+                    <label class="field"><span>Standard price (GHS) — Tough adds <?php echo ghs(TOUGH_EXTRA); ?></span>
                         <input type="number" name="price" class="input" required min="1" step="0.01" value="<?php echo e($editing['product_price'] ?? ''); ?>"></label>
                     <label class="field"><span>Starting stock for newly ticked phones</span>
                         <input type="number" name="stock" class="input" min="0" value="10"></label>
