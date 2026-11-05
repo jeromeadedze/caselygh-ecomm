@@ -18,6 +18,19 @@ class CustomDesignClass extends Database
         return $ok ? (int) $this->getLastInsertId() : false;
     }
 
+    // A customer's past designs, newest first. "ordered" means it reached a paid order.
+    public function getDesignsByCustomer($customerId, $limit = 50)
+    {
+        $sql = "SELECT d.design_id, d.case_type, d.design_text, d.price, d.status, d.created_at, m.model_name,
+                       EXISTS (SELECT 1 FROM orderdetails od JOIN orders o ON o.order_id = od.order_id
+                               WHERE od.design_id = d.design_id AND o.order_status NOT IN ('pending_payment', 'cancelled')) AS ordered
+                FROM custom_designs d
+                JOIN phone_models m ON m.model_id = d.model_id
+                WHERE d.customer_id = ?
+                ORDER BY d.created_at DESC, d.design_id DESC LIMIT " . (int) $limit;
+        return $this->fetchAll($sql, [$customerId]);
+    }
+
     public function getDesign($designId)
     {
         $sql = "SELECT d.*, m.model_name, b.brand_name, c.customer_name, c.customer_email

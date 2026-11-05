@@ -41,6 +41,29 @@ $navLinks = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Caveat:wght@600;700&family=DM+Sans:wght@400;500;700&family=Great+Vibes&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo $ROOT_DIR; ?>/css/style.css?v=<?php echo filemtime(__DIR__ . '/../../css/style.css'); ?>">
+    <script>
+    // Only the case you opened travels between the shop and its page.
+    (function () {
+        function linkPhoto(url) {
+            try {
+                var slug = new URL(url).searchParams.get('slug');
+                var card = slug && document.querySelector('a.product-card[href$="slug=' + encodeURIComponent(slug) + '"]');
+                var photo = card && card.querySelector('.product-card-media');
+                if (photo) photo.style.viewTransitionName = 'case-' + card.dataset.caseId;
+                return photo;
+            } catch (e) { /* the pages simply fade */ }
+        }
+        addEventListener('pageswap', function (e) {
+            if (e.viewTransition && e.activation && e.activation.entry) linkPhoto(e.activation.entry.url);
+        });
+        addEventListener('pagereveal', function (e) {
+            var from = window.navigation && navigation.activation && navigation.activation.from;
+            if (!e.viewTransition || !from) return;
+            var photo = linkPhoto(from.url);
+            if (photo) e.viewTransition.finished.finally(function () { photo.style.viewTransitionName = ''; });
+        });
+    })();
+    </script>
 </head>
 <body class="<?php echo isset($admin_page) ? 'admin-ui' : 'store-ui'; ?>">
     <a href="#main" class="skip-link">Skip to content</a>

@@ -40,7 +40,7 @@ $products = is_logged_in() ? (new ProductController())->getProducts() : [];
         <a href="#share" class="chip">Share your case</a>
     </nav>
 
-    <section class="section" id="customers">
+    <section class="section" id="customers" data-reveal>
         <div class="ig-head">
             <div>
                 <h2 class="section-title">Our customers</h2>
@@ -79,7 +79,7 @@ $products = is_logged_in() ? (new ProductController())->getProducts() : [];
         <?php endif; ?>
     </section>
 
-    <section class="section" id="collabs">
+    <section class="section" id="collabs" data-reveal>
         <h2 class="section-title">Collabs</h2>
         <p class="muted lead">Cases made with brands and creators.</p>
         <ul class="collab-grid">
@@ -103,7 +103,7 @@ $products = is_logged_in() ? (new ProductController())->getProducts() : [];
         </div>
     </section>
 
-    <section class="section" id="reviews">
+    <section class="section" id="reviews" data-reveal>
         <h2 class="section-title">Reviews</h2>
         <?php if ($reviews): ?>
             <?php $average = round((float) $reviewSummary['average'], 1); ?>

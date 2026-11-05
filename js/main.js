@@ -70,15 +70,22 @@
   document.addEventListener('submit', async (e) => {
     const f = e.target;
     if (!f.matches('form[data-inline]') || !window.fetch) return;
+    if (f.matches('[data-confirm-title]') && f.dataset.confirmed !== '1') return; // asks first, below
     e.preventDefault();
-    if (f.dataset.busy === '1') return;
-    f.dataset.busy = '1';
     const btn = e.submitter || f.querySelector('[type="submit"]');
+    if (f.dataset.busy === '1') {
+      f.dataset.again = '1'; // a quick second press counts once the first has finished
+      return;
+    }
+    f.dataset.busy = '1';
     if (btn) btn.setAttribute('aria-busy', 'true');
+    const label = btn ? btn.getAttribute('aria-label') : null;
     const row = f.closest('[id]');
     const action = f.getAttribute('action');
     try {
-      const res = await fetch(f.action, { method: 'POST', body: new FormData(f), credentials: 'same-origin' });
+      const body = new FormData(f);
+      if (btn && btn.name) body.append(btn.name, btn.value); // FormData leaves out the pressed button
+      const res = await fetch(f.action, { method: 'POST', body, credentials: 'same-origin' });
       const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
       const fresh = doc.querySelector(f.dataset.inline);
       const current = document.querySelector(f.dataset.inline);
@@ -86,10 +93,22 @@
         window.location.assign(res.url || window.location.href); // e.g. logged out: show that page
         return;
       }
+      const keepY = window.scrollY;
       current.replaceWith(fresh);
+      window.scrollTo({ top: keepY, behavior: 'instant' });
       const newRow = row && row.id ? document.getElementById(row.id) : null;
-      const focusTo = newRow && (newRow.querySelector('form[action="' + action + '"] button') || newRow.querySelector('button, a'));
+      const inRow = newRow && newRow.querySelector('form[action="' + action + '"]');
+      const same = inRow && label ? [...inRow.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === label) : null;
+      const focusTo = (same && !same.disabled ? same : null)
+        || (inRow && inRow.querySelector('button:not([disabled])'))
+        || (newRow && newRow.querySelector('button:not([disabled]), a'))
+        || fresh.querySelector('button:not([disabled]), a');
       if (focusTo) focusTo.focus({ preventScroll: true });
+      window.scrollTo({ top: keepY, behavior: 'instant' });
+      const count = doc.querySelector('.cart-count');
+      const myCount = document.querySelector('.cart-count');
+      if (count && myCount) myCount.textContent = count.textContent;
+      if (f.dataset.again === '1' && same && !same.disabled) same.click();
       const stack = doc.querySelector('.toast-stack');
       if (stack) {
         document.querySelectorAll('.toast-stack').forEach((old) => old.remove());
@@ -101,6 +120,52 @@
       f.submit();
     }
   });
+
+  // A closed studio waits here as a small tab until it's reopened or discarded.
+  const showStudioTab = () => {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('casely-minimized') || 'null'); } catch (e) { return; }
+    if (!saved) return;
+    const designLink = document.querySelector('.main-nav a[href*="design.php"]');
+    const away = document.body.classList.contains('admin-ui') || /\/(checkout|login|register|order_confirmation)\.php$/.test(location.pathname);
+    if (!designLink || away) return;
+    if (Date.now() - saved.at > 24 * 3600 * 1000) {
+      localStorage.removeItem('casely-minimized');
+      return;
+    }
+    const tab = document.createElement('div');
+    tab.className = 'studio-tab';
+    const open = document.createElement('a');
+    open.className = 'studio-tab-open';
+    open.href = designLink.href;
+    open.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><circle cx="10" cy="7" r="1.5"/></svg><span><strong>Continue your design</strong><span class="studio-tab-model"></span></span>';
+    open.querySelector('.studio-tab-model').textContent = saved.model || 'Custom case';
+    const discard = document.createElement('form');
+    discard.action = '#';
+    discard.dataset.confirmTitle = 'Discard this design?';
+    discard.dataset.confirmBody = "Your photos and changes in this design will be removed from this browser. Saved drafts aren't affected.";
+    discard.dataset.confirmYes = 'Discard design';
+    discard.dataset.confirmNo = 'Keep design';
+    discard.innerHTML = '<button type="submit" class="studio-tab-discard" aria-label="Discard your design"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>';
+    discard.addEventListener('submit', (e) => {
+      if (discard.dataset.confirmed !== '1') return;
+      e.preventDefault();
+      localStorage.removeItem('casely-minimized');
+      const req = indexedDB.open('casely-studio', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('pending');
+      req.onsuccess = () => req.result.transaction('pending', 'readwrite').objectStore('pending').delete('design');
+      tab.remove();
+    });
+    tab.append(open, discard);
+    let isNew = false;
+    try {
+      isNew = sessionStorage.getItem('casely-tab-new') === '1';
+      sessionStorage.removeItem('casely-tab-new');
+    } catch (e) { /* no entrance, the tab still shows */ }
+    if (isNew) tab.classList.add('is-new');
+    document.body.append(tab);
+  };
+  showStudioTab();
 
   // Actions that reload the same page bring you back to where you were.
   const PLACE_KEY = 'casely-place';
@@ -148,12 +213,12 @@
     confirmBox.showModal();
     no.focus(); // the safe choice is the default
   }
-  document.querySelectorAll('form[data-confirm-title]').forEach((form) => {
-    form.addEventListener('submit', (e) => {
-      if (form.dataset.confirmed === '1') return;
-      e.preventDefault();
-      askToConfirm(form);
-    });
+  // Listens on the document so forms that were updated in place still ask.
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (!form.matches('form[data-confirm-title]') || form.dataset.confirmed === '1') return;
+    e.preventDefault();
+    askToConfirm(form);
   });
 
   // Remember the customer's phone in this browser, so they only choose it once.
@@ -171,17 +236,33 @@
   // ---------- Home page ----------
   // Sections rise into place once as they enter the screen. The class is added
   // from here, so without JavaScript everything is simply visible.
-  const reveals = document.querySelectorAll('[data-reveal]');
-  if (reveals.length && 'IntersectionObserver' in window) {
+  // Marketing sections slide into place piece by piece as you scroll, once.
+  const REVEAL_PIECES = '.section-title, .section-title-sm, .ig-head, .phone-finder, .product-card, .collection-tile, .how-step, .ig-strip li, .ig-reward, .benefits-visual, .benefit-list li, .benefits .btn, .faq-item, .final-cta, .customer-photos li, .collab-card, .collab-invite, .customer-review';
+  const revealSections = document.querySelectorAll('[data-reveal]');
+  if (revealSections.length && 'IntersectionObserver' in window) {
     document.documentElement.classList.add('js-reveal');
     const io = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        io.unobserve(entry.target);
+        const piece = entry.target;
+        io.unobserve(piece);
+        piece.classList.add('is-visible');
+        // Hand the element back to its own hover and press transitions.
+        setTimeout(() => {
+          piece.classList.remove('reveal-piece', 'is-visible');
+          piece.style.removeProperty('--reveal-delay');
+        }, 1000);
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
-    reveals.forEach((el) => io.observe(el));
+    }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
+    revealSections.forEach((section) => {
+      const pieces = [...section.querySelectorAll(REVEAL_PIECES)].filter((el) => !el.parentElement.closest('.final-cta'));
+      (pieces.length ? pieces : [section]).forEach((piece) => {
+        const siblings = [...piece.parentElement.children];
+        piece.style.setProperty('--reveal-delay', (siblings.indexOf(piece) % 4) * 60 + 'ms');
+        piece.classList.add('reveal-piece');
+        io.observe(piece);
+      });
+    });
   }
 
   // Tagline: each word lights up in reading order as the section scrolls in.

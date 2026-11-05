@@ -1,7 +1,7 @@
 <?php
 // One product tile. Expects $product (a row from ProductController) and $ROOT_DIR.
 ?>
-<a href="<?php echo $ROOT_DIR; ?>/views/single_product.php?slug=<?php echo urlencode($product['product_slug']); ?>" class="product-card">
+<a href="<?php echo $ROOT_DIR; ?>/views/single_product.php?slug=<?php echo urlencode($product['product_slug']); ?>" class="product-card" data-case-id="<?php echo (int) $product['product_id']; ?>">
     <div class="product-card-media">
         <?php if (!empty($product['product_image'])): ?>
             <img src="<?php echo $ROOT_DIR; ?>/images/products/<?php echo e($product['product_image']); ?>" alt="<?php echo e($product['product_title']); ?> phone case" loading="lazy" width="768" height="960">

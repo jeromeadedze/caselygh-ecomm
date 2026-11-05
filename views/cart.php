@@ -12,6 +12,7 @@ $problems = $cartCtrl->findStockProblems($items);
 <div class="container container-narrow page">
     <h1 class="display-lg">Your cart</h1>
 
+    <div id="cart-content">
     <?php if (!$items): ?>
         <div class="empty-state soft-panel">
             <p class="script script-lg">It's empty!</p>
@@ -25,7 +26,7 @@ $problems = $cartCtrl->findStockProblems($items);
         <div class="cart-layout">
             <ul class="cart-list">
                 <?php foreach ($items as $item): ?>
-                    <li class="cart-item">
+                    <li class="cart-item" id="cart-item-<?php echo (int) $item['cart_id']; ?>">
                         <div class="cart-thumb">
                             <?php if ($item['is_custom']): ?>
                                 <img src="<?php echo $ROOT_DIR; ?>/actions/design_image_action.php?id=<?php echo (int) $item['design_id']; ?>" alt="Your custom design">
@@ -45,17 +46,17 @@ $problems = $cartCtrl->findStockProblems($items);
                             <?php if ($item['is_custom']): ?>
                                 <span class="tag tag-butter">Custom · checked before printing</span>
                             <?php endif; ?>
-                            <form action="<?php echo $ROOT_DIR; ?>/actions/update_cart_action.php" method="POST" data-keep-place class="qty-stepper qty-sm">
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/update_cart_action.php" method="POST" data-inline="#cart-content" class="qty-stepper qty-sm">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="cart_id" value="<?php echo (int) $item['cart_id']; ?>">
                                 <button type="submit" name="qty" value="<?php echo (int) $item['qty'] - 1; ?>" aria-label="Decrease quantity" <?php echo $item['qty'] <= 1 ? 'disabled' : ''; ?>>&minus;</button>
                                 <span aria-label="Quantity"><?php echo (int) $item['qty']; ?></span>
-                                <button type="submit" name="qty" value="<?php echo (int) $item['qty'] + 1; ?>" aria-label="Increase quantity" <?php echo $item['qty'] >= 10 ? 'disabled' : ''; ?>>+</button>
+                                <button type="submit" name="qty" value="<?php echo (int) $item['qty'] + 1; ?>" aria-label="Increase quantity" <?php echo $item['qty'] >= ($item['is_custom'] ? 10 : min(10, (int) $item['stock'])) ? 'disabled' : ''; ?>>+</button>
                             </form>
                         </div>
                         <div class="cart-side">
                             <p class="strong"><?php echo ghs($item['line_total']); ?></p>
-                            <form action="<?php echo $ROOT_DIR; ?>/actions/remove_from_cart_action.php" method="POST" data-keep-place<?php if ($item['is_custom']): ?> data-confirm-title="Remove your custom case?" data-confirm-body="You'll need to design it again unless you saved a draft." data-confirm-yes="Remove case" data-confirm-no="Keep case"<?php endif; ?>>
+                            <form action="<?php echo $ROOT_DIR; ?>/actions/remove_from_cart_action.php" method="POST" data-inline="#cart-content"<?php if ($item['is_custom']): ?> data-confirm-title="Remove your custom case?" data-confirm-body="You'll need to design it again unless you saved a draft." data-confirm-yes="Remove case" data-confirm-no="Keep case"<?php endif; ?>>
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="cart_id" value="<?php echo (int) $item['cart_id']; ?>">
                                 <button type="submit" class="icon-btn" aria-label="Remove <?php echo e($item['item_name']); ?>">
@@ -83,6 +84,7 @@ $problems = $cartCtrl->findStockProblems($items);
             </aside>
         </div>
     <?php endif; ?>
+    </div>
 </div>
 
 <?php require_once __DIR__ . '/layout/footer.php'; ?>

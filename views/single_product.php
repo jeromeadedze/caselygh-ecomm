@@ -46,7 +46,7 @@ $caseDesign = casely_case_design($product['product_slug']);
 
     <div class="product-detail">
         <div class="product-media-col">
-            <div class="product-detail-media" id="product-media"
+            <div class="product-detail-media" id="product-media" style="view-transition-name: case-<?php echo (int) $product['product_id']; ?>"
                  <?php if ($caseDesign): ?>data-design="<?php echo e(json_encode($caseDesign)); ?>" data-title="<?php echo e($product['product_title']); ?>"<?php endif; ?>>
                 <?php if ($product['product_image']): ?>
                     <img class="pdm-photo" src="<?php echo $ROOT_DIR; ?>/images/products/<?php echo e($product['product_image']); ?>" alt="<?php echo e($product['product_title']); ?> phone case" width="768" height="960">

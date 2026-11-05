@@ -60,6 +60,11 @@ class CustomDesignController
         return $id ? ['success' => true, 'design_id' => $id] : ['success' => false, 'error' => 'Unable to save your design. Try again.'];
     }
 
+    public function getDesignsByCustomer($customerId, $limit = 50)
+    {
+        return $this->designModel->getDesignsByCustomer($customerId, $limit);
+    }
+
     public function getDesign($designId)
     {
         return $this->designModel->getDesign($designId);

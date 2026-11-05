@@ -1092,17 +1092,66 @@
       r.onerror = () => reject(r.error);
     });
   }
-  async function keepPending() {
+  async function keepPending(extra = {}) {
     try {
       const db = await idb();
       await new Promise((resolve, reject) => {
         const tx = db.transaction('pending', 'readwrite');
-        tx.objectStore('pending').put({ settings: draftSettings(), photos: state.photos.map((p) => p.file), at: Date.now() }, 'design');
+        tx.objectStore('pending').put({ settings: draftSettings(), photos: state.photos.map((p) => p.file), at: Date.now(), ...extra }, 'design');
         tx.oncomplete = resolve;
         tx.onerror = () => reject(tx.error);
       });
-    } catch (_) { /* private mode etc.: the customer simply starts again */ }
+      return true;
+    } catch (_) { /* private mode etc.: the customer simply starts again */
+      return false;
+    }
   }
+  async function putPendingBack(pending) {
+    try {
+      const db = await idb();
+      db.transaction('pending', 'readwrite').objectStore('pending').put(pending, 'design');
+    } catch (_) { /* nothing more to do */ }
+  }
+
+  // Closing compresses the studio into a small tab on the page you came from.
+  // The design waits in this browser, and the tab brings it back.
+  const closeLink = $('#studio-close');
+  let closeAnim = null;
+  closeLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (closeLink.dataset.closing) return;
+    closeLink.dataset.closing = '1';
+    const kept = await keepPending({ minimized: true, draftId: state.draftId || null, draftTitle: state.draftTitle || null });
+    try {
+      if (kept) {
+        localStorage.setItem('casely-minimized', JSON.stringify({ model: state.modelName, at: Date.now() }));
+        sessionStorage.setItem('casely-tab-new', '1');
+      }
+    } catch (_) { /* the design still reopens from Custom design */ }
+    let target = closeLink.href;
+    try {
+      const from = new URL(document.referrer);
+      if (from.origin === location.origin && !/\/(design|login|register)\.php$/.test(from.pathname)) target = from.href;
+    } catch (_) { /* no usable previous page: go home */ }
+    const panel = $('.studio');
+    const moving = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    panel.style.transformOrigin = '0 ' + (window.scrollY + window.innerHeight) + 'px';
+    closeAnim = panel.animate(
+      moving
+        ? [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.16)', opacity: 0 }]
+        : [{ opacity: 1 }, { opacity: 0 }],
+      { duration: moving ? 240 : 150, easing: getComputedStyle(document.documentElement).getPropertyValue('--ease-settle').trim() || 'ease-out', fill: 'forwards' }
+    );
+    await closeAnim.finished.catch(() => {});
+    window.location.href = target;
+  });
+  // Coming back with the browser's Back button shows the studio, not the end of the animation.
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted && closeAnim) {
+      closeAnim.cancel();
+      delete closeLink.dataset.closing;
+    }
+  });
   async function takePending() {
     try {
       const db = await idb();
@@ -1195,20 +1244,58 @@
   let savedFingerprint = designFingerprint();
   function markSaved() { savedFingerprint = designFingerprint(); }
   const newDesignDialog = $('#new-design-dialog');
-  $('#new-design').addEventListener('click', (e) => {
+  // Leaving this design with unsaved changes asks first, for a new design or another draft.
+  function confirmLeaving(e, href, title, yes) {
     if (designFingerprint() === savedFingerprint) return;
     e.preventDefault();
+    $('#new-design-title').textContent = title;
+    const go = $('#new-design-go');
+    go.href = href;
+    go.textContent = yes;
     newDesignDialog.showModal();
     $('#new-design-keep').focus();
+  }
+  $('#new-design').addEventListener('click', (e) => confirmLeaving(e, e.currentTarget.href, 'Start a new design?', 'Start new design'));
+
+  // My designs: a drawer of drafts to reopen and designs made before.
+  const designsDrawer = $('#designs-drawer');
+  $('#designs-open').addEventListener('click', () => {
+    designsDrawer.showModal();
+    $('#designs-close').focus();
   });
+  $('#designs-close').addEventListener('click', () => designsDrawer.close());
+  designsDrawer.addEventListener('click', (e) => {
+    if (e.target === designsDrawer) designsDrawer.close(); // a click on the backdrop
+  });
+  $$('[data-open-draft]').forEach((a) =>
+    a.addEventListener('click', (e) => confirmLeaving(e, a.href, 'Open this draft?', 'Open draft'))
+  );
   $('#new-design-keep').addEventListener('click', () => newDesignDialog.close());
 
   // Reopen a design: one kept while signing in, or a saved draft (?draft=ID).
   (async function restore() {
-    const pending = await takePending();
+    let pending = await takePending();
+    // Opening a different saved draft leaves the design in the tab where it is.
+    const requested = studio.dataset.draft ? JSON.parse(studio.dataset.draft).id : null;
+    if (pending && pending.minimized && requested && pending.draftId !== requested) {
+      await putPendingBack(pending);
+      pending = null;
+    }
     if (pending && Date.now() - pending.at < 24 * 3600 * 1000) {
       applyDesign(pending.settings || {}, (pending.photos || []).map((file) => ({ file })));
       resetHistory();
+      if (pending.minimized) {
+        try { localStorage.removeItem('casely-minimized'); } catch (_) { /* nothing to clear */ }
+        state.draftId = pending.draftId || null;
+        state.draftTitle = pending.draftTitle || null;
+        if (state.draftId) {
+          draftBtn.innerHTML = '<span>Save</span>';
+          draftBtn.setAttribute('aria-label', 'Save changes to draft');
+          history.replaceState(null, '', '?draft=' + state.draftId);
+          setDraftStatus('Picked up where you left off on "' + (state.draftTitle || 'your draft') + '".');
+        }
+        return;
+      }
       markSaved();
       if (LOGGED_IN) saveDraft();
       return;

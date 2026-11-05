@@ -29,6 +29,15 @@ if (isset($_GET['draft'])) {
     }
 }
 
+// The "My designs" drawer: drafts to reopen and designs made before.
+$myDrafts = is_logged_in() ? (new DraftController())->getDrafts(get_user_id()) : [];
+$myDesigns = [];
+if (is_logged_in()) {
+    require_once __DIR__ . '/../controllers/CustomDesignController.php';
+    $myDesigns = (new CustomDesignController())->getDesignsByCustomer(get_user_id());
+}
+$myDesignCount = count($myDrafts) + count($myDesigns);
+
 $steps = ['Device model', 'Case type', 'Photo', 'Layout', 'Filters', 'Text', 'Fonts', 'Text layout'];
 $fonts = [
     ['Script', "Pacifico, cursive"],
@@ -80,7 +89,7 @@ define('MAX_STUDIO_PHOTOS', 36);
     <!-- Canvas -->
     <div class="studio-canvas">
         <div class="studio-topbar">
-            <a href="<?php echo $ROOT_DIR; ?>/views/shop.php" class="round-btn" aria-label="Close studio">
+            <a href="<?php echo $ROOT_DIR; ?>/index.php" class="round-btn" id="studio-close" aria-label="Close studio and keep your design" title="Close and keep your design">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </a>
             <span class="studio-badge">CASELY</span>
@@ -144,6 +153,13 @@ define('MAX_STUDIO_PHOTOS', 36);
             <p class="draft-status" id="draft-status" role="status"></p>
             <button type="button" class="text-link small" id="draft-rename" hidden>Rename</button>
         </div>
+
+        <button type="button" class="designs-open" id="designs-open" aria-haspopup="dialog">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span class="designs-open-label">My designs</span>
+            <?php if ($myDesignCount): ?><span class="designs-open-count"><?php echo $myDesignCount; ?></span><?php endif; ?>
+            <svg class="designs-open-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
 
         <p class="studio-error" id="studio-error" role="alert" hidden></p>
         <div class="studio-steps">
@@ -309,6 +325,78 @@ define('MAX_STUDIO_PHOTOS', 36);
     <form method="dialog"><button class="signin-dialog-close text-link small" value="cancel">Not now</button></form>
 </dialog>
 
+<dialog class="designs-drawer" id="designs-drawer" aria-labelledby="designs-title">
+    <div class="designs-head">
+        <h2 class="section-title-sm" id="designs-title">My designs</h2>
+        <button type="button" class="round-btn" id="designs-close" aria-label="Close My designs">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+    </div>
+    <?php if (!is_logged_in()): ?>
+        <p class="muted">Log in to see your drafts and past designs. We'll hold on to the design you're working on.</p>
+        <div class="button-row" style="margin-top: 1rem;">
+            <a href="<?php echo $ROOT_DIR; ?>/views/login.php?next=studio" class="btn btn-primary" data-keep-design>Log in</a>
+            <a href="<?php echo $ROOT_DIR; ?>/views/register.php?next=studio" class="btn btn-outline" data-keep-design>Create account</a>
+        </div>
+    <?php else: ?>
+        <section class="designs-group" aria-labelledby="drafts-heading">
+            <h3 class="designs-group-title" id="drafts-heading">Drafts</h3>
+            <?php if (!$myDrafts): ?>
+                <p class="muted small">No drafts yet. Press Save draft to keep a design and finish it later.</p>
+            <?php else: ?>
+                <ul class="designs-list">
+                    <?php foreach ($myDrafts as $d): ?>
+                        <?php $isCurrent = $draftData && (int) $d['draft_id'] === $draftData['id']; ?>
+                        <li class="designs-item" data-draft-row="<?php echo (int) $d['draft_id']; ?>">
+                            <span class="designs-thumb"><?php if ($d['preview_image']): ?><img src="<?php echo $ROOT_DIR; ?>/actions/draft_file_action.php?f=<?php echo e($d['preview_image']); ?>" alt="" loading="lazy" onerror="this.remove()"><?php endif; ?></span>
+                            <span class="designs-info">
+                                <strong><?php echo e($d['draft_name']); ?></strong>
+                                <span class="muted small">Saved <?php echo date('j M Y, H:i', strtotime($d['updated_at'])); ?></span>
+                            </span>
+                            <?php if ($isCurrent): ?>
+                                <span class="status status-approved">Editing</span>
+                            <?php else: ?>
+                                <a href="<?php echo $ROOT_DIR; ?>/views/design.php?draft=<?php echo (int) $d['draft_id']; ?>" class="btn btn-outline btn-xs" data-open-draft>Open<span class="visually-hidden"> <?php echo e($d['draft_name']); ?></span></a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </section>
+        <section class="designs-group" aria-labelledby="past-heading">
+            <h3 class="designs-group-title" id="past-heading">Past designs</h3>
+            <?php if (!$myDesigns): ?>
+                <p class="muted small">Designs you add to your cart appear here.</p>
+            <?php else: ?>
+                <ul class="designs-list">
+                    <?php foreach ($myDesigns as $d): ?>
+                        <?php
+                        $state = $d['status'] === 'rejected' ? ['Not approved', 'status-rejected']
+                            : ($d['status'] === 'approved' ? ['Approved', 'status-approved']
+                            : ($d['ordered'] ? ['In review', 'status-pending'] : ['Not ordered yet', 'status-hidden']));
+                        ?>
+                        <li class="designs-item">
+                            <span class="designs-thumb"><img src="<?php echo $ROOT_DIR; ?>/actions/design_image_action.php?id=<?php echo (int) $d['design_id']; ?>" alt="" loading="lazy" onerror="this.remove()"></span>
+                            <span class="designs-info">
+                                <strong>Custom case<?php echo $d['design_text'] ? ' · ' . e($d['design_text']) : ''; ?></strong>
+                                <span class="muted small"><?php echo e($d['model_name']); ?> · <?php echo e($d['case_type']); ?> · <?php echo ghs($d['price']); ?></span>
+                                <span class="status <?php echo $state[1]; ?>"><?php echo $state[0]; ?></span>
+                            </span>
+                            <?php if ($d['status'] !== 'rejected'): ?>
+                                <form action="<?php echo $ROOT_DIR; ?>/actions/reorder_design_action.php" method="POST">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="design_id" value="<?php echo (int) $d['design_id']; ?>">
+                                    <button type="submit" class="btn btn-outline btn-xs"><?php echo $d['ordered'] ? 'Order again' : 'Add to cart'; ?><span class="visually-hidden">: <?php echo e($d['design_text'] ?: 'custom case'); ?></span></button>
+                                </form>
+                            <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
+</dialog>
+
 <dialog class="signin-dialog" id="draft-name-dialog" aria-labelledby="draft-name-title">
     <form id="draft-name-form">
         <h2 class="section-title-sm" id="draft-name-title">Name this design</h2>
@@ -328,7 +416,7 @@ define('MAX_STUDIO_PHOTOS', 36);
     <h2 class="section-title-sm" id="new-design-title">Start a new design?</h2>
     <p class="muted">Changes you haven't saved to this design will be lost. Save a draft first to keep them.</p>
     <div class="button-row" style="margin-top: 1.25rem;">
-        <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="btn btn-danger">Start new design</a>
+        <a href="<?php echo $ROOT_DIR; ?>/views/design.php" class="btn btn-danger" id="new-design-go">Start new design</a>
         <button type="button" class="btn btn-outline" id="new-design-keep">Keep editing</button>
     </div>
 </dialog>
