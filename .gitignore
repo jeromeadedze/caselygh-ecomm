@@ -14,3 +14,6 @@ uploads/public/community/*
 
 # Local database backups
 database/backups/
+
+# Claude Code local tooling
+.claude/

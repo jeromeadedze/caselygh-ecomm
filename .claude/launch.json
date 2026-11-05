@@ -1,1 +1,0 @@
-{"version":"0.0.1","configurations":[{"name":"casely-break-ui","runtimeExecutable":"php","runtimeArgs":["-d","auto_prepend_file=/private/tmp/claude-501/-Users-adedze-Desktop-Ashesi-Senior-Year-E-commerce-casely/7d3b70ab-873f-4200-87f4-47152eb1fbf7/scratchpad/breakui/prepend.php","-d","display_errors=0","-S","127.0.0.1:8091"],"port":8091}]}
